@@ -4,13 +4,13 @@ CLEO mod for GTA: San Andreas that has as goal to recreate the Nintendo 64 Perfe
 
 # Progress
 
-Chapter 1
+## Chapter 1
 
 - [x] dataDyne Central - Defection (90%)
 - [x] dataDyne Research - Investigation (88%)
 - [x] dataDyne Central - Extraction (62%)
 
-Chapter 2
+### Chapter 2
 
 - [x] Carrington Villa - Hostage One (43%)
 
@@ -35,25 +35,18 @@ Chapter 6
 
 - [ ] Pelagic II - Exploration
 - [ ] Deep Sea - Nullify Threat
-- [ ] 
 
 Chapter 7
 
 - [ ] Carrington Institute - Defense
-- [ ] 
-- [ ] 
 
 Chapter 8
 
 - [ ] Attack Ship - Covert Assault
-- [ ] 
-- [ ] 
 
 Chapter 9
 
 - [ ] Skedar Ruins - Battle Shrine
-- [ ] 
-- [ ] 
 
 Secret Missions
 
