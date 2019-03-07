@@ -4,7 +4,7 @@ CLEO mod for GTA: San Andreas that has as goal to recreate the Nintendo 64 Perfe
 
 # Progress
 
-## Chapter 1
+### Chapter 1
 
 - [x] dataDyne Central - Defection (90%)
 - [x] dataDyne Research - Investigation (88%)
@@ -14,7 +14,7 @@ CLEO mod for GTA: San Andreas that has as goal to recreate the Nintendo 64 Perfe
 
 - [x] Carrington Villa - Hostage One (43%)
 
-Chapter 3
+#### Chapter 3
 
 - [x] Chicago - Stealth (36%)
 - [x] G5 Building - Reconnaissance (37%)
