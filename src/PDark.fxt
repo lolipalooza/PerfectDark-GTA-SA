@@ -1,0 +1,485 @@
+MHLP01	~b~~k~~GO_FORWARD~ / ~k~~GO_BACK~~w~: Change option ~b~~k~~PED_SPRINT~~w~: Accept
+
+MTBL01	Enter Mission
+MTBL02	Perfect Menu
+MTBL03	Mission Select
+MTBL_1	Solo Missions
+MTBL_2	Combat Simulator
+MTBL_3	Co-Operative
+MTBL_4	Counter-Operative
+
+M_ERR1	The Mission you ~y~selected~w~ is not ready yet...
+M_ERR2	This option is not ~b~suported~w~ yet...
+
+OBJ1	Objective 1:
+OBJ2	Objective 2:
+OBJ3	Objective 3:
+OBJ4	Objective 4:
+OBJ5	Objective 5:
+
+MJO_1	(Joanna) Received.
+MJO_2	(Joanna) Understood.
+MJO_3	(Joanna) Confirmed.
+MJO_4	(Joanna) Affirmative.
+
+MDIF1	Agent
+MDIF2	Special Agent
+MDIF3	Perfect Agent
+MDIF4	Perfect Dark
+
+MOBJ1	~w~Objective 1: Completed
+MOBJ2	~w~Objective 2: Completed
+MOBJ3	~w~Objective 3: Completed
+MOBJ4	~w~Objective 4: Completed
+MOBJ5	~w~Objective 5: Completed
+
+CAMSPY1	Picked up your CamSpy.
+MSKIP	You can ~b~skip~w~ the mission intro by pressing ~k~~CONVERSATION_YES~.
+PD		Perfect Dark
+MDRLCK	The door is locked.
+CI		Carrington Institute
+OBTB01	Abort Mission
+OBJINC	Incomplete
+OBJCMP	Complete
+T_LEFT	Time Left
+
+# Missions List
+M1_1	dataDyne Central: Defection
+M1_2	dataDyne Research: Investigation
+M1_3	dataDyne Central: Extraction
+M2_1	Carrington Villa: Hostage One
+M3_1	Chicago: Stealth
+M3_2	G5 Building: Reconnaissance
+M4_1	Area 51: Infiltration
+M4_2	Area 51: Rescue
+M4_3	Area 51: Escape
+M5_1	Air Base: Espionage
+M5_2	Air Force One: Antiterrorism
+M5_3	Crash Site: Confrontation
+M6_1	Pelagic II: Exploration
+M6_2	Deep Sea: Nullify Threat
+M7_1	Carrington Institute: Defense
+M8_1	Attack Ship: Covert Assault
+M9_1	Skedar Ruins: Battle Shrine
+M_SP1	Mr. Blonde's Revenge
+M_SP2	Maian SOS
+M_SP3	WAR!
+M_SP4	The Duel
+
+# Missions Objectives
+M11OB1	Disable internal security hub
+M11OB2	Obtain keycode necklace
+M11OB3	Download project files
+M11OB4	Disable external comms hub
+M11OB5	Gain entrance to laboratory
+
+M12OB1	Holograph radioactive isotope
+M12OB2	Start security maintenance cycle
+M12OB3	Shut down experiments
+M12OB4	Obtain experimental technologies
+M12OB5	Locate Dr. Caroll
+
+M13OB1	Access foyer elevator
+M13OB2	Reactivate office elevator
+M13OB3	Destroy dataDyne Hovercopter
+M13OB4	Defeat Cassandra's bodyguards
+M13OB5	Rendezvous at helipad
+
+M21OB1	Save the negotiator
+M21OB2	Eliminate rooftop snipers
+M21OB3	Activate wind generator
+M21OB4	Locate and eliminate dataDyne hackers
+M21OB5	Capture dataDyne guard
+M21OB6	Rescue Carrington
+
+M31OB1	Retrieve drop point equipment
+M31OB2	Attach tracer to limousine
+M31OB3	Prepare escape route
+M31OB4	Create vehicular diversion
+M31OB5	Gain entry to G5 building
+
+M32OB1	Disable damping field generator
+M32OB2	Deactivate laser grid systems
+M32OB3	Holograph meeting conspirators
+M32OB4	Retrieve Dr. Caroll backup from safe
+M32OB5	Exit building
+
+M41OB1	Shut down air intercept radar
+M41OB2	Plant comms device on antenna
+M41OB3	Disable all Robot Interceptors
+M41OB4	Gain access to hangar lift
+M41OB5	Make contact with CI spy
+
+M42OB1	Destroy computer records
+M42OB2	Locate conspiracy evidence
+M42OB3	Obtain and use lab technician Disguise
+M42OB4	Gain access to autopsy lab
+M42OB5	Rescue the crash survivor
+
+# Mission 1.1
+M11_001	(Joanna) Why the big hurry?
+M11_002	(Carrington) If Dr Caroll is not extracted tonight, dataDyne will put him through mind conditioning,
+M11_003	(Carrington) and we'll lose our best chance of finding out what dataDyne are up to.
+M11_004	(Joanna) Are they all expendable?
+M11_005	(Carrington) Don't joke! You have to be careful, Joanna. Code keys will only operate while the owner is alive...
+M11_006	(Carrington) if you kill them, the key is useless. Armed guards are a different matter of course.
+M11_007	(Joanna) What's the target location?
+M11_008	(Carrington) Work your way down the building to the ground level.
+M11_009	(Carrington) Dr Caroll will be in a research lab somewhere in the underground facility.
+M11_010	(Joanna) How will I recognize him?
+M11_011	(Carrington) We don't have an image record, and we can't find any official files. All we have is the name.
+M11_012	(Carrington) Good luck, Perfect Dark.
+M11_013	(Carrington) We're getting a positive reading - the internal comms hub is nearby.
+M11_014	(Carrington) You're on the same floor as Cassandra's office.
+M11_015	(Cassandra) Who are you, and what are you doing here?
+M11_016	(Secretary) Look out, she's got a gun!
+M11_017	(Cassandra) You won't shoot me, foolish child!
+M11_018	(Cassandra) Don't you know who I am?
+M11_019	(Cassandra) Let's see how you deal with security.
+M11_020	(Cassandra) You will regret this intrusion, girl.
+M11_021	(Cassandra) How dare you disturb me!
+M11_022	(Cassandra) If I were you, I'd leave... NOW!
+M11_023	(Secretary) Don't shoot!
+M11_024	(Secretary) Please don't kill me.
+M11_025	(dataDyne Worker) Yes, yes, I agree. Personality is expendable in this case.
+M11_026	(dataDyne Worker) No, I can start the process from my office terminal and delete the necessary files at the same time.
+M11_027	(dataDyne Worker) I'll begin at once. Goodbye.
+M11_028	(dataDyne Worker) Help - Intruder!
+M11_029	(dataDyne Worker) Security... help me!
+M11_030	(dataDyne Worker) HELP, HELP!
+M11_031	(Joanna) I've got a password problem, and you're the man to help me with it.
+M11_032	(dataDyne Worker) Don't shoot, don't shoot!
+M11_033	(Joanna) Move it!
+M11_034	(dataDyne Worker) You vandal, you've broken it!
+M11_035	(dataDyne Worker) I... I'm logging on now.
+M11_036	(dataDyne Worker) Right, I'm in...
+M11_037	(dataDyne Worker) Goodbye, Dr Caroll.
+M11_038	(Joanna) The other hub has got to be in the security room.
+M11_039	(Carrington) The basement elevator must be around there somewhere.
+M11_040	EMC Mine placed correctly.
+M11_041	
+M11_042	Internal security system temporarily disabled.
+M11_043	Door unlocked.
+M11_044	Picked up De Vries' necklace.
+M11_045	Security system is now back on line.
+M11_046	File download initiated.
+M11_047	File download completed.
+M11_048	External communications hub disabled.
+M11_049	Laboratory lift located.
+M11_050	Critical mission personnel killed.
+M11_051	Press ~s~ENTER~w~ to access ~i~Security Locks.
+M11_052	Press ~s~ENTER~w~ to use ECM mines.
+M11_053	Press ~s~ENTER~w~ to download project files.
+M11_054	((Phone rings))
+M11_055	
+
+# Mission 1.2
+M12_001	(Carrington) Get out, Jo! The levels are too high. Use the CamSpy.
+M12_002	(Grimshaw) Reprogram that cleaning bot - it'll give you a way in.
+M12_003	(Joanna) Something around here's using a lot of power.
+M12_004	(Lab Technician) What are you doing in my lab?
+M12_005	(Joanna) Shut down the experiment.
+M12_006	(Lab Technician) I'll shut it down.
+M12_007	(Lab Technician) My experiments!
+M12_008	(Lab Technician) I haven't seen you before...
+M12_009	(Joanna) Pull the plug on it, NOW!
+M12_010	(Lab Technician) Please, just don't hurt me.
+M12_011	(Lab Technician) There, the experiment is down.
+M12_012	(Lab Technician) Who the hell are you?
+M12_013	(Joanna) Switch this thing off!
+M12_014	(Lab Technician) Allow me to assist you.
+M12_015	(Lab Technician) Accidents will happen.
+M12_016	(Lab Technician) Leave this area, NOW!
+M12_017	(Lab Technician) Stop shooting!
+M12_018	(Lab Technician) Security!
+M12_019	(Lab Technician) Try it now.
+M12_020	(Lab Technician) And again.
+M12_021	(Lab Technician) Any better?
+M12_022	(dataDyne Trooper) I'm not sure.
+M12_023	(dataDyne Trooper) Take that!
+M12_024	(dataDyne Trooper) I dunno.
+M12_025	(dataDyne Trooper) Come on!
+M12_026	(Lab Technician) Oh, oh no! She's got a gun!
+M12_027	(Carrington) That's the highest security sector - Dr Caroll has to be nearby.
+M12_028	Enemy detected - weapon cache locked.
+M12_029	Maintenance robots deactivated.
+M12_030	Maintenance robots reprogrammed.
+M12_031	Maintenance robots activated.
+M12_032	Maintenance cycle activated.
+M12_033	Powering down active systems.
+M12_034	Experiment has been shut down.
+M12_035	Experimental item 1 acquired.
+M12_036	Experimental item 2 acquired.
+M12_037	Experimental item 3 acquired.
+M12_038	Connection established.
+M12_039	Searching for password.
+M12_040	Contact broken - reestablish link.
+M12_041	ACCESS DENIED - security code required.
+M12_042	Password located - bypassing lock.
+M12_043	Security doors unlocked.
+M12_044	Radioactive isotope successfuly photographed.
+M12_045	WARNING - radioactive matter detected.
+M12_046	Radioactive isotope is not going to be photographed.
+M12_047	Press ~s~ENTER~w~ to access Security System.
+M12_048	Maintenance robots already reprogrammed.
+M12_049	Press ~s~ENTER~w~ to access Experiment Control Panel.
+M12_050	Press ~s~ENTER~w~ to crack Security Locks.
+M12_051	You cannot leave without ~b~Dr. Caroll~w~.
+M12_052	
+
+# Mission 1.3
+M13_001	(Carrington) They've locked down the ground floor - get to the elevator!
+M13_002	(Dr. Caroll) Do you actually know what you're doing?
+M13_003	(Dr. Caroll) Protect me!
+M13_004	(Dr. Caroll) I'm dying.
+M13_005	(dataDyne Hovercopter) Surrender or die, fugitive!
+M13_006	(Carrington) That 'copter needs to be taken out, or the jumpship'll be shot down.
+M13_007	(dataDyne Worker 1) That's not how it goes.
+M13_008	(dataDyne Worker 2) Yes it is...
+M13_009	(dataDyne Worker 1) Give it to me, you're doing it wrong.
+M13_010	(dataDyne Worker 2) Stop annoying me.
+M13_011	(dataDyne Trooper) Will you just hurry up!
+M13_012	(dataDyne Worker 1) Oh no! We're too late.
+M13_013	(dataDyne Worker 2) She's here!
+M13_014	(Cassandra) We meet again, girl!
+M13_015	(Cassandra) You've become quite an annoyance.
+M13_016	(Cassandra) Get her!
+M13_017	(Cassandra) Good night, Miss Dark!
+M13_018	(Joanna) I can't leave any bodyguards standing.
+M13_019	(Carrington) Don't keep the jumpship waiting. Get back to the landing pad!
+M13_020	Foyer elevator accessed.
+M13_021	Accessing elevator controls...
+M13_022	Office elevator door has been unlocked.
+M13_023	DataDyne Hovercopter eliminated.
+M13_024	Cassandra's bodyguards have been defeated.
+M13_025	The elevator is out of service.
+M13_026	The elevator is locked.
+M13_027	Press ~s~ENTER~w~ to Access Electronic Locks.
+M13_028	dD Hovercopter
+M13_029	
+M13_030	
+M13_031	
+M13_032	
+M13_033	
+M13_034	
+M13_035	
+M13_036	
+M13_037	
+M13_038	
+M13_039	
+M13_040	
+M13_041	
+M13_042	
+M13_043	
+M13_044	
+M13_045	
+M13_046	
+M13_047	
+M13_048	
+M13_049	
+M13_050	
+
+# Mission 2.1
+M21_001	(Joanna) Agent Dark Mission Log, 1846 hours. Last night we got a call from Cassandra de Vries.
+M21_002	(Joanna) A dataDyne team has taken Daniel Carrington hostage at his private villa on the coast, and they say they will spare his life in exchange for the AI.
+M21_003	(Joanna) Unfortunately we don't have it. Daniel and Dr Caroll were at the villa to discuss 'matters of mutual interest'.
+M21_004	(Joanna) It looks like Daniel found a way to hide Dr Caroll inside the villa when the dataDyne hit squad arrived.
+M21_005	(Joanna) Hopefully, our phoney negotiator ploy will give me a chance to surprise the dataDyne squad.
+M21_006	(Joanna) This time, it's not just my life on the line.
+M21_007	(Joanna) I've got to be quick, or they'll kill the negotiator!
+M21_008	(Joanna) If I get the wind generator back online, I'll get power to the lower basement.
+M21_009	(Grimshaw) Joanna, it's Grimshaw. We've got hackers at the villa! You've got to stop them before they get to our files.
+M21_010	(Joanna) Those hackers have got to be stopped, before I rescue Daniel.
+M21_011	(Joanna) Here's where they must be holding Daniel.
+M21_012	(Carrington) Act your age, Joanna.
+M21_013	Enemy guard has been subdued.
+M21_014	Negotiator has escaped to safety.
+M21_015	Snipers have been eliminated.
+M21_016	Cooling systems have been activated.
+M21_017	Power systems have been activated.
+M21_018	Windmill has been reactivated.
+M21_019	Hackers have been eliminated.
+M21_020	Picked up a door key.
+M21_021	Carrington hs been rescued.
+M21_022	Take your ~r~equipment~w~ and go to the ~r~Villa~w~.
+M21_023	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Machine Control Panel~w~.
+M21_024	
+M21_025	
+M21_026	
+M21_027	
+M21_028	
+M21_029	
+M21_030	
+M21_031	
+M21_032	
+M21_033	
+M21_034	
+M21_035	
+M21_036	
+M21_037	
+M21_038	
+M21_039	
+M21_040	
+M21_041	
+
+
+# Mission 3.1
+M31_001	(Carrington) We suspect the G5 corporation is just a front for dataDyne and whoever else is involved in this plot.
+M31_002	(Carrington) I know Cassandra de Vries is going to be here, but I need to know who else is attending and what they discuss.
+M31_003	(Carrington) By the time you get out, the help I requested should have arrived.
+M31_004	(Joanna) Just who is this help you keep referring to?
+M31_005	(Carrington) Not now, Joanna, time for radio silence. Good luck!
+M31_006	(Joanna) Thanks a lot.
+M31_007	(FBI Agent) How's it going?
+M31_008	(FBI Agent) Base, we have an intruder!
+M31_009	(CIA and FBI - Communications) Attention all personnel. Locate and apprehend fugitive.
+M31_010	(G5 Patrol Robot) Stop where you are! 
+M31_011	(G5 Patrol Robot) Attack, attack!
+M31_012	(Carrington) The only place we could secure the equipment was a storm drain.
+M31_013	(Grimshaw) Reprogram that taxi - it's a Mark 2 and should be compatible.
+M31_014	(Civilian) Greetings, citizen.
+M31_015	(Civilians) Whoa, take it easy there, lady.
+M31_016	(Civilians) I don't want any trouble.
+M31_017	(Civilians) Here... take the wallet.
+M31_018	(Joanna) Either of those blocked-up doors will do as an escape route.
+M31_019	(Carrington) The car park lift is your only point of ingress.
+M31_020	dataDyne limo has escaped.
+M31_021	Picked up a Remote Mine.
+M31_022	Picked up a Reprogrammer.
+M31_023	Tracer Bug placed correctly.
+M31_024	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to install a ~r~Tracer~w~ to limousine.
+M31_025	Mine placed correctly.
+M31_026	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to install an ~r~Explosive~w~.
+M31_027	Accessing hovercab navigation systems.
+M31_028	Press ~r~~k~~PED_ANSWER_PHONE~/ ~k~~PED_FIREWEAPON_ALT~~w~ to use ~r~Reprogrammer~w~.
+M31_029	Virus downloaded successfully.
+M31_030	Connection to hovercab broken.
+M31_031	Diversion has been created.
+M31_032	They have discovered you. Your chance to enter ~b~G5~w~ is lost.
+M31_033	Now it's time to take a ~b~new journey~w~.
+M31_034	
+
+# Mission 3.2
+M32_001	(Joanna) There's no way through while those lasers are active.
+M32_002	(Joanna) That must be the meeting room up ahead. Time to use the CamSpy.
+M32_003	(Cassandra) We've recovered the sapient from Carrington and altered its programming. It no longer has a personality, so there will be no further incidents.
+M32_004	(Mr Blonde) This will reduce its efficiency. My team will have to take it to the core themselves. This will endanger them.
+M32_005	(Mr Blonde) You should have anticipated that the sapient might develop a troublesome moral code.
+M32_006	(Cassandra) No one could have predicted that! And I resent being singled out for blame! What about him?
+M32_007	(Mr Blonde) The President turned down your request for the loan of the Pelagic II? Could it be you overestimated your influence over him?
+M32_008	(Trent) No! Perhaps I underestimated his resolve. We have a contingency plan ready to go,
+M32_009	(Trent) and we will move as soon as the Presidential entourage arrives at the air base. All I need from the President is a tissue sample.
+M32_010	(Cassandra) Ha! Assuming you don't get any interference. If Carrington has pieced together enough of this, he will have called for reinforcements.
+M32_011	(Trent) There will be no outside help for Mr Carrington. The technology you gave us is installed in Nevada and fully operational.
+M32_012	(Trent) We can intercept any craft they use.
+M32_013	(Mr Blonde) Then the devices we gave you are working correctly? Good, because we believe anything which does not work correctly should be destroyed.
+M32_014	(Mr Blonde) Consider that as you follow your 'back-up plans'.
+M32_015	(Grimshaw) The safe's heavily encrypted. The decoder's gonna take a little longer.
+M32_016	(G5 Loudspeaker) INTRUDER ALERT - all security to the vault.
+M32_017	(Joanna) Time to leave! Let's get to the door I set up earlier.
+M32_018	(Joanna) Agent Dark reporting in! Prepare to receive a download of the meeting data.
+M32_019	(Joanna) Priority request for an Institute Support Team to protect the President before he goes to Alaska.
+M32_020	(Carrington) No time for that now, Agent Dark. There's been a development during radio silence.
+M32_021	(Carrington) The craft those 'friends' I was talking about was shot down over Nevada. The weapon responsible was fired from Area 51...
+M32_022	(Carrington) that's where the survivors and debris will have been taken. You're to prep for immediate dispatch when you return here. Carrington out.
+M32_023	(Carrington) Area 51? But what about the President?
+M32_024	Damping field generator shut down.
+M32_025	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Generator Control Panel~w~.
+M32_026	Laser grid unit shut down.
+M32_027	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to activate ~r~Switch~w~.
+M32_028	All laser grid systems shut down.
+M32_029	You can activate the ~r~CamSpy~w~ by pressing ~r~~k~~VEHICLE_ENTER_EXIT~~w~ while you set camera as main weapon.
+M32_030	They've discovered you. The meeting is ~r~cancelled~w~.
+M32_031	Door decoder attached. Initiating cracking routines.
+M32_032	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to place the  ~r~Door Decoder~w~ on the Security Panel.
+M32_033	Door Decoder finished - door unlocked.
+M32_034	Picked up the backup disk.
+M32_035	Press ~r~~k~~PED_FIREWEAPON~~w~ to trigger the ~r~Explosives~w~.
+M32_036	
+
+# Mission 4.1
+M41_001	(Carrington) Okay, Joanna, take a look at this. Our operative inside Area 51 was able to get this out to us.
+M41_002	(Carrington) This is your entry point... a deserted helipad on the edge of the base.
+M41_003	(Carrington) The lift down to the hangars and the rendezvous point is beyond that wall... watch out for these guards.
+M41_004	(Carrington) Here is the communication antenna. Attach a comms rider bug so we can talk to you when you're inside the base.
+M41_005	(Carrington) Again, watch out for hostiles.
+M41_006	(Joanna) Oh my...!
+M41_007	(Carrington) Here is our friend. He appears to be physically unhurt, though he hasn't regained consciousness yet.
+M41_008	(Carrington) By the look of it, the surgeons are almost done with their preliminary tests and will begin dissection soon.
+M41_009	(Joanna) But who was...?
+M41_010	(Carrington) Any questions? No. Good. Away you go to the hangar.
+M41_011	(Joanna) Agent Dark Mission Log, 1028 hours. Against my better judgement, I'm about to enter Area 51.
+M41_012	(Joanna) There's the antenna, but... I can't throw a bug that high!
+M41_013	(Jonathan) Careful with that trigger finger, Agent Dark - you're closing in on my position.
+M41_014	(Jonathan) Agent Dark, over here.
+M41_015	(Joanna) There you are, I was beginning to wonder if...
+M41_016	(Jonathan) If what?
+M41_017	(Joanna) If you'd been discovered yet. And frankly, if this is how you work, I'm amazed that you lasted longer than five minutes.
+M41_018	(Jonathan) I was tidying up one of your loose ends.
+M41_019	(Joanna) My loose ends?
+M41_020	(Jonathan) I'm sorry, I didn't realize you wanted him to shoot you. I can call in some more guards if you like.
+M41_021	(Joanna) Okay, okay, forget about it. I'm going to let the Institute know we've made contact.
+M41_022	Explosive has been placed.
+M41_023	Intruder detected - security system on-line.
+M41_024	Foreign object detected - security alented.
+M41_025	Air intercept radar shut down.
+M41_026	Lift access denied - key card needed.
+M41_027	Key card accepted - lift operational.
+M41_028	Robot interceptor disabled.
+M41_029	All robot interceptors disabled.
+M41_030	Antenna lowered.
+M41_031	Communications bug placed correctly.
+M41_032	Picked up lift key card.
+M41_033	Hangar has been accessed.
+M41_034	Met up with CI Agent.
+M41_035	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to install the ~r~Explosives~w~.
+M41_036	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to install the ~r~Bug~w~ on the Communication Panel.
+M41_037	Press ~s~ENTER~w~ to activate Hangar Lift.
+M41_038	
+
+# Mission 4.2
+M42_001	(Jonathan) The problem you have is that there is no way to sneak into the research section.
+M42_002	(Jonathan) The only way in available to you is a weak section of wall I've marked in a room beyond the stores.
+M42_003	(Jonathan) It can be destroyed with explosives.
+M42_004	(Joanna) Doesn't sound like a problem to me. Where are these explosives?
+M42_005	(Jonathan) In that crate.
+M42_006	(Joanna) Cute. Very cute.
+M42_007	(Jonathan) By the way, the stores are crawling with guards.
+M42_008	(Jonathan) It may go against your nature, but try sneaking through rather than blasting everything.
+M42_009	(Joanna) Certainly. Any other pearls of wisdom?
+M42_010	(Jonathan) That crate...
+M42_011	(Joanna) Yes?
+M42_012	(Jonathan) It really doesn't like being shot.
+M42_013	(Joanna) Great. Now if I can just fight the urge to report him to base security...
+M42_014	(Carrington) The temperature is dropping... you must be close to the cryo room.
+M42_015	Scanner target aqcuired.
+M42_016	Scanner lock lost.
+M42_017	Target ID confirmed - XT origin.
+M42_018	(Joanna) The showers... Now, if I can convince someone to part with their uniform.
+M42_019	(Lab Technician) Who are you?
+M42_020	(Lab Technician) Oh my - a gun!
+M42_021	(Lab Technician) Help - help!
+M42_022	(Lab Technician) There is an intruder in the complex!
+M42_023	Picked up lab clothes.
+M42_024	(Johanna) I don't have much time!!!
+M42_025	The enemy has discovered the disguise.
+M42_026	(Area 51 Guard) So, you got here at last.
+M42_027	(Area 51 Guard) Everyone's been waiting for you...
+M42_028	Picked up medlab 2 key card.
+M42_029	(Joanna) The air's heavily recycled around here - must be near the autopsy lab.
+M42_030	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to use ~r~keycard~w~.
+M42_031	(Carrington) There he is, Jo! Hurry or you'll be too late!
+M42_032	Laboratory accessed successfully.
+M42_033	Elvis has been killed.
+M42_034	Data Uplink connected.
+M42_035	Security system is on-line. Access denied.
+M42_036	Initiating virus download.
+M42_037	Virus downloaded to the console.
+M42_038	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Control Panel~w~.
+M42_039	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Electronic Locks~w~.
+M42_040	Research records destroyed.
+M42_041	Mission critical equipment destroyed.
+M42_042	Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to activate ~r~Lift~w~.
+M42_043	Press ~s~ENTER~w~ to activate ~r~Bridge~w~.
+M42_044	The bridge has been lowered.
+M42_045	
