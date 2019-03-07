@@ -1,0 +1,1774 @@
+DEFINE MISSIONS 2
+DEFINE MISSION 0 AT @INITIAL
+DEFINE MISSION 1 AT @VILLA
+
+
+DEFINE EXTERNAL_SCRIPTS -1 // Use -1 in order not to compile AAA script
+//DEFINE SCRIPT {NAME} AT {LABEL} @
+
+DEFINE UNKNOWN_EMPTY_SEGMENT 0
+
+DEFINE UNKNOWN_THREADS_MEMORY 0
+
+{$VERSION 3.0.0000}
+var
+$PLAYER_CHAR: Player
+end // var
+03A4: name_thread 'MAIN'
+01F0: set_max_wanted_level_to 6
+0111: toggle_wasted_busted_check 0
+00C0: set_current_time_hours_to 8 minutes_to 0
+04E4: unknown_refresh_game_renderer_at 1049.9067 1031.3267
+03CB: set_rendering_origin_at 1049.9067 1031.3267 10.685
+0053: $PLAYER_CHAR = create_player #NULL at 1049.9067 1031.3267 10.685 //1453.0439 -1841.0349 13.5469
+01F5: $PLAYER_ACTOR = create_player_actor $PLAYER_CHAR
+07AF: $PLAYER_GROUP = player $PLAYER_CHAR group
+0373: set_camera_directly_behind_player
+01B6: set_weather 0
+0001: wait 0 ms
+087B: set_player $PLAYER_CHAR clothes_texture "PLAYER_FACE" model "HEAD" body_part 1
+087B: set_player $PLAYER_CHAR clothes_texture "JEANSDENIM" model "JEANS" body_part 2
+087B: set_player $PLAYER_CHAR clothes_texture "SNEAKERBINCBLK" model "SNEAKER" body_part 3
+087B: set_player $PLAYER_CHAR clothes_texture "VEST" model "VEST" body_part 0
+070D: rebuild_player $PLAYER_CHAR
+01B4: toggle_player $PLAYER_CHAR can_move 0
+016A: fade 0 time 0
+04BB: select_interior 0
+0629: change_integer_stat 181 to 4
+016C: restart_if_wasted_at 2027.77 -1420.52 15.99 angle 137.0 town_number 0
+016D: restart_if_busted_at 1550.68 -1675.49 14.51 angle 90.0 town_number 0
+0180: set_on_mission_flag_to $ONMISSION // Note: your missions have to use the variable defined here
+0004: $DEFAULT_WAIT_TIME = 250
+03E6: remove_text_box
+
+023C: load_special_actor 'reimu' as 1
+038B: load_requested_models
+repeat
+wait 0 ms
+until 023D:   special_actor 1 loaded
+09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+0296: unload_special_actor 1
+
+wait 1000 ms
+016A: fade 1 time 2000
+01B4: toggle_player $PLAYER_CHAR can_move 1
+0417: start_mission 0 // Initial
+wait 0
+// put your create_thread commands here
+00D7: create_thread @CI_MISSIONS_SNIFFER
+
+:MAIN_LOOP
+0001: wait $DEFAULT_WAIT_TIME ms
+0002: jump @MAIN_LOOP
+
+
+
+
+{==============================================================
+GLOBAL SUBROUTINES
+===============================================================}
+:SUB_FADE_500MS
+0169: set_fade_color_RGB 0 0 0 
+016A: fade 0 time 500 
+
+:LITCAS_282
+00D6: if 
+016B:   fading 
+004D: jump_if_false @LITCAS_306 
+0001: wait 0 ms 
+0002: jump @LITCAS_282 
+
+:LITCAS_306
+0051: return 
+//------------------------
+:TELEPORT
+// Seleccionando Interior y colocándo al jugador en él
+0050: gosub @SUB_FADE_500MS 
+01B4: toggle_player $PLAYER_CHAR can_move 0
+04BB: select_interior $ACTIVE_INTERIOR 
+0860: link_actor $PLAYER_ACTOR to_interior $ACTIVE_INTERIOR 
+04E4: unknown_refresh_game_renderer_at $PLAYER_X $PLAYER_Y 
+03CB: set_rendering_origin_at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+//04F9: set_interior 1 color_to 0 
+00A1: put_actor $PLAYER_ACTOR at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+0173: set_actor $PLAYER_ACTOR Z_angle_to $PLAYER_ANGLE 
+0373: set_camera_directly_behind_player 
+//02EB: restore_camera_with_jumpcut
+0051: return
+//------------------------
+:FADEOUT
+0001: wait 1000 ms 
+016A: fade 1 time 1000 
+01B4: set_player $PLAYER_CHAR can_move 1
+0051: return
+//------------------------
+:JOANNA_RESPONSE
+0209: $RAND = random_int_in_ranges 0 3
+00D6: if
+0039:   $RAND == 0
+004D: jump_if_false @J01 
+00BC: show_text_highpriority GXT 'MJO_1' time 4000 flag 1  // (Joanna) Received.
+:J01
+00D6: if
+0039:   $RAND == 1
+004D: jump_if_false @J02 
+00BC: show_text_highpriority GXT 'MJO_2' time 4000 flag 1  // (Joanna) Understood.
+:J02
+00D6: if
+0039:   $RAND == 2
+004D: jump_if_false @J03 
+00BC: show_text_highpriority GXT 'MJO_3' time 4000 flag 1  // (Joanna) Confirmed.
+:J03
+00D6: if
+0039:   $RAND == 3
+004D: jump_if_false @J04 
+00BC: show_text_highpriority GXT 'MJO_4' time 4000 flag 1  // (Joanna) Affirmative.
+:J04
+0051: return  
+//------------------------
+:SELECT_DIFFICULTY
+01B4: set_player $PLAYER_CHAR can_move 0
+0512:  show_permanent_text_box 'MHLP01'
+08D4: $SEL_DIF_MENU = create_panel_with_title 'MTBL01' position 29.0 145.0 width {220.0} 300.0 columns 1 interactive 1 background 1 alignment 1
+08DB:  set_panel $SEL_DIF_MENU column 0 header s$MISSION data 'MDIF1' 'MDIF2' 'MDIF3' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY'// 'M3_2' 'M4_1' 'M4_2' 'M4_3' 'M5_1' 'M5_2'
+repeat
+wait 0 ms
+until 00E1: player 0 pressed_key 16 
+08D7: $choice = panel $SEL_DIF_MENU active_row
+08DA: remove_panel $SEL_DIF_MENU
+03E6: remove text box
+if $choice == 0
+then
+$MISSION_DIFFICULTY = 1          // Agent
+end
+if $choice == 1
+then
+$MISSION_DIFFICULTY = 2          // Special Agent
+end
+if $choice == 2
+then
+$MISSION_DIFFICULTY = 3          // Perfect Agent
+end
+0051: return  
+//------------------------
+:MISSION_BAR
+if 00E1:   player 0 pressed_key 11    //~k~~CONVERSATION_YES~
+then
+    015D: set_gamespeed  0.001 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 0 
+
+    038E: draw_box_position 400.0 270.0 size 400.0 220.0 RGBA 123 34 111 75
+    038E: draw_box_position 400.0 185.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.5 1.2
+    0343: set_text_draw_linewidth 600.0 
+    033E: set_draw_text_position 225.0 170.0 GXT s$MISSION    // Mission Name
+
+    if 85AD:   not s$OBJ1 == 'DUMMY'
+    then
+        // Objective 1
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 200.0 GXT 'OBJ1'
+        
+        // Objective 1 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 200.0 GXT s$OBJ1
+        
+        // Objective 1 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ1 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ2 == 'DUMMY'
+    then
+        // Objective 2
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 225.0 GXT 'OBJ2'
+        
+        // Objective 2 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 225.0 GXT s$OBJ2
+        
+        // Objective 2 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ2 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ3 == 'DUMMY'
+    then
+        // Objective 3
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 250.0 GXT 'OBJ3'
+        
+        // Objective 3 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 250.0 GXT s$OBJ3
+        
+        // Objective 3 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ3 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ4 == 'DUMMY'
+    then
+        // Objective 4
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 275.0 GXT 'OBJ4'
+        
+        // Objective 4 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 275.0 GXT s$OBJ4
+        
+        // Objective 4 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ4 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ5 == 'DUMMY'
+    then
+        // Objective 5
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 300.0 GXT 'OBJ5'
+        
+        // Objective 5 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 300.0 GXT s$OBJ5
+        
+        // Objective 5 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ5 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    038E: draw_box_position 400.0 337.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.4 1.0
+    0343: set_text_draw_linewidth 600.0 
+    03E4: enable_text_draw_align_right 1
+    033E: set_draw_text_position 540.0 340.0 GXT 'OBTB01'     // Abort Mission
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+        
+    repeat
+    wait 0 ms
+    until 00E1:   player 0 pressed_key 11
+
+    015D: set_gamespeed  1.0 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 1
+    03F0: enable_text_draw 0 
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+end
+0051: return  
+
+
+
+
+
+
+{==============================================================
+MISSION SNIFFER
+===============================================================}
+// put your mods (threads) here
+:CI_MISSIONS_SNIFFER
+thread "CI_SNIFF"
+$MARKER_CARRINGTON_INSTITUTE = Marker.CreateIconAndSphere(42, $X_CARRINGTON_INSTITUTE, $Y_CARRINGTON_INSTITUTE, $Z_CARRINGTON_INSTITUTE)
+repeat
+wait $DEFAULT_WAIT_TIME
+if and
+player.Defined($PLAYER_CHAR)
+$ONMISSION == 0
+then
+    if and
+        00FF: actor $PLAYER_ACTOR sphere 0 in_sphere $X_CARRINGTON_INSTITUTE $Y_CARRINGTON_INSTITUTE $Z_CARRINGTON_INSTITUTE radius 1.0 1.0 2.0 on_foot
+        Player.Controllable($PLAYER_CHAR)
+        $TUT_MISSIONS_PASSED == 0
+    then
+        054C: use_GXT_table 'PD'
+        $ONMISSION = 1
+        s$MISSION = 'M2_1' // Carrington Villa: Hostage One
+        0050: gosub @SELECT_DIFFICULTY
+        00BA: show_text_styled GXT 'M2_1' time 1000 style 2 // Carrington Villa: Hostage One
+        01B4: toggle_player $PLAYER_CHAR can_move 0
+        0050: gosub @SUB_FADE_500MS 
+        start_mission 1
+    end
+end
+until $TUT_MISSIONS_PASSED == 1
+marker.Disable($MARKER_CARRINGTON_INSTITUTE)
+end_thread
+
+//––––-Mission 0–––––
+:INITIAL
+$TUT_MISSIONS_PASSED = 0
+$ONMISSION = 0
+     
+$X_CARRINGTON_INSTITUTE = 1046.3639
+$Y_CARRINGTON_INSTITUTE = 1015.7791
+$Z_CARRINGTON_INSTITUTE = 11.0
+//0629: change_integer_stat 225 to 999 // capacidad pulmonar al máximo jolines tío no la empalmeis hostia!
+
+model.Load(#FCR900)
+038B: load_requested_models
+
+:INITIAL_LOAD
+wait 0 ms
+if
+model.Available(#FCR900)
+004D: jump_if_false @INITIAL_LOAD
+
+0674: set_car_model #FCR900 numberplate "DARK_"
+$darkbike = car.Create(#FCR900,1452.9561, -1837.4128, 13.5469)
+end_thread
+
+
+
+
+
+
+//––––-Mission 1–––––
+{==============================================================
+CARRINGTON VILLA: HOSTAGE ONE
+===============================================================}
+// Mission wrapper
+:VILLA
+thread 'M2_1'
+gosub @VILLA_MAIN
+if wasted_or_busted
+then
+gosub @VILLA_FAIL
+end
+gosub @VILLA_CLEANUP
+end_thread
+
+//––––––––––––-
+:VILLA_MAIN
+const         
+{==============================================================================
+Nomenclatura propuesta:     0-99: actors,vehicles 
+                            100-199: flags y variables numéricas de uso general
+                            200-299: objects or pickups
+                            300-399: markers/spheres/checkpoints
+                            400-499: decision makers, rutas y comportamientos
+===============================================================================     }
+    // ======= Obj1
+    // 10@ - 14@: Rooftop Snipers
+    // 310@ - 314@: Markers above snipers
+    // ======= Obj2
+    // 320@: Wind generatos sphere 1
+    // 321@: Checkpoint for sphere 1
+    // 322@ - 323@ - 324@: Markers for generators
+    // 325@ - 326@: spheres for generators 1 and 2
+    // 120@ - 121@ - 122@: flags de comprobación para generadores
+    // ======= Obj3
+    // 15@ - 18@: dD Hackers
+    // 330@ - 333@: Markers for Hackers
+    // ======= Obj4
+    // 19@ - 20@: dataDyne Guards
+    // 21@: Negotiator
+    // 340@ - 341@ - 342@: Markers de los actores
+    // ======= Obj5
+    // 22@ - 23@ - 24@: Guardias que custodian a Carrington
+    Carrington = 25@
+    Pickup = 200@
+    // 130@: Contador de guardias muertos para soltar la llave magnética
+    // 131@ - 132@ - 133@: posición x-y-z del último guardia muerto
+    // 134@: flag de checkpoint creado
+    // 350@: checkpoint
+    // 135@: ángulo de la puerta
+    // ======= General
+    // 220@: rifle
+    Helicopter = 0@
+    // 300@: Helicopter Marker
+    // 301@: Sniper Rifle Marker
+    // 302@: Sphere above Agent or Special Agent initial point
+    // 303@: Checkpoint for 302@ Sphere
+    // 230@ - ...: objects
+end                                                                                                                                                            // ======= Obj1
+
+04BB: select_interior 0 
+0860: link_actor $PLAYER_ACTOR to_interior 0 
+
+// Wanted level of the mission
+010D: set_player $PLAYER_CHAR wanted_level_to 0 
+01F0: set_max_wanted_level_to 0 
+
+// Initialize global variables for Mission Status Bar
+if 0038:   $MISSION_DIFFICULTY == 1  // Agent
+then s$OBJ1='M21OB1'
+s$OBJ2='M21OB3'
+s$OBJ3='M21OB6'
+s$OBJ4='DUMMY'
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 2  // Special Agent
+then s$OBJ1='M21OB1'
+s$OBJ2='M21OB2'
+s$OBJ3='M21OB3'
+s$OBJ4='M21OB6'
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 3  // Perfect Agent
+then s$OBJ1='M21OB2'
+s$OBJ2='M21OB3'
+s$OBJ3='M21OB4'
+s$OBJ4='M21OB5'
+s$OBJ5='M21OB6'
+end
+
+//Spawn Objects
+// The boxes at the start
+029B: 230@ = init_object #woodenbox at 160.107 -461.554 14.2164
+0453: set_object 230@ XY_rotation 0.0 346.045 angle 270.0 
+029B: 231@ = init_object #woodenbox at 161.707 -461.254 13.9164
+0453: set_object 231@ XY_rotation 166.0 181.0 angle 307.0 //194.0 181.0 angle 307.0 
+029B: 232@ = init_object #woodenbox at 182.7 -488.98 26.8766
+0453: set_object 232@ XY_rotation 161.0 178.0 angle 53.0 //199.0 178.0 angle 53.0
+029B: 233@ = init_object #woodenbox at 183.8 -487.98 26.4766
+0453: set_object 233@ XY_rotation 341.0 358.0 angle 0.0 //19.0 358.0 angle 0.0
+029B: 234@ = init_object #woodenbox at 200.774 -465.152 17.7663
+0453: set_object 234@ XY_rotation 342.0 4.0 angle 18.0 //18.0 4.0 angle 18.0
+029B: 235@ = init_object #woodenbox at 202.374 -464.752 17.6663
+0453: set_object 235@ XY_rotation 342.0 4.0 angle 6.0 //18.0 4.0 angle 6.0
+
+// The Generator
+029B: 236@ = init_object #GENERATOR_BIG at -78.9333 -300.526 1.7541
+0453: set_object 236@ XY_rotation 0.0 0.0 angle 90.0
+
+// The computer room 1
+029B: 237@ = init_object #CJ_DF_WORKTOP at 98.3908 -161.913 2.0937
+0453: set_object 237@ XY_rotation 0.0 0.0 angle 0.0
+029B: 238@ = init_object #rest_chair at 98.5086 -163.063 1.5937
+0453: set_object 238@ XY_rotation 0.0 0.0 angle 180.0
+029B: 239@ = init_object #officedesk2 at 94.2887 -161.679 1.56533
+0453: set_object 239@ XY_rotation 0.0 0.0 angle 0.0
+029B: 240@ = init_object #officedesk2 at 92.0887 -161.679 1.56533
+0453: set_object 240@ XY_rotation 0.0 0.0 angle 0.0
+029B: 241@ = init_object #officedesk1 at 90.071 -161.722 1.56141
+0453: set_object 241@ XY_rotation 0.0 0.0 angle 0.0
+029B: 242@ = init_object #rest_chair at 90.5086 -162.063 1.5937
+0453: set_object 242@ XY_rotation 180.0 180.0 angle 333.0
+029B: 243@ = init_object #officedesk1 at 85.071 -165.322 1.56141
+0453: set_object 243@ XY_rotation 0.0 0.0 angle 90.0
+029B: 244@ = init_object #officedesk1l at 86.0613 -168.17 1.54483
+0453: set_object 244@ XY_rotation 0.0 0.0 angle 90.0
+029B: 245@ = init_object #officedesk2 at 89.2887 -168.079 1.56533
+0453: set_object 245@ XY_rotation 0.0 0.0 angle 180.0
+029B: 246@ = init_object #officedesk1 at 96.171 -168.122 1.56141
+0453: set_object 246@ XY_rotation 0.0 0.0 angle 180.0
+029B: 247@ = init_object #rest_chair at 95.2086 -167.463 1.5937
+0453: set_object 247@ XY_rotation 0.0 0.0 angle 0.0
+029B: 248@ = init_object #officedesk2l at 99.3157 -167.075 1.58792
+0453: set_object 248@ XY_rotation 0.0 0.0 angle 180.0
+
+// The computer room 2
+029B: 249@ = init_object #officedesk1 at 243.743 -53.9703 0.584526
+0453: set_object 249@ XY_rotation 0.0 0.0 angle 90.0
+029B: 250@ = init_object #officedesk1 at 246.643 -52.8703 0.584526
+0453: set_object 250@ XY_rotation 0.0 0.0 angle 0.0
+029B: 251@ = init_object #rest_chair at 244.728 -54.4517 0.5937
+0453: set_object 251@ XY_rotation 180.0 180.0 angle 333.0
+
+// Near Carrington Hostage
+029B: 252@ = init_object #sec_keypad at 201.082 -236.31 2.0452
+0453: set_object 252@ XY_rotation 0.0 0.0 angle 0.0
+029B: 253@ = init_object #imy_la_door at 199.232 -235.365 1.86595
+0453: set_object 253@ XY_rotation 0.0 0.0 angle 270.0//0.0 0.0 angle 90.0
+
+//Spawn actor & Load models
+if
+0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+then
+    0247: load_model #cuntgun
+    023C: load_special_actor 'rdisg1' as 1
+    038B: load_requested_models                                             
+
+    repeat
+    wait 0 ms
+    until 0248: model #cuntgun available and 023D: special_actor 1 loaded
+        
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL01   // Disguised Joanna 1
+    
+//Cutscene
+
+    00A1: put_actor $PLAYER_ACTOR at 263.2506 -486.4406 20.4306
+    0173: set_actor $PLAYER_ACTOR Z_angle_to 20.4306
+    0373: set_camera_directly_behind_player
+    032B: 220@ = create_weapon_pickup #cuntgun group 15 ammo 60 at 261.3122 -288.1229 1.5781
+    0249: release_model #cuntgun
+    //0249: release_model #sbfyri
+    0296: unload_special_actor 1
+    
+    0001: wait 1000 ms 
+    016A: fade 1 time 500
+    01B4: set_player $PLAYER_CHAR can_move 1 
+else               // Agent or Special Agent
+    04E4: unknown_refresh_game_renderer_at -1321.125 -203.527
+    03CB: set_rendering_origin_at -1321.125 -203.527 14.1484
+    00A1: put_actor $PLAYER_ACTOR at -1321.125 -203.527 14.1484
+    0173: set_actor $PLAYER_ACTOR Z_angle_to 315.0
+    0373: set_camera_directly_behind_player 
+    
+    0247: load_model #sniper
+    0247: load_model #maverick
+    038B: load_requested_models                                             
+    
+    repeat
+    wait 0 ms
+    until 0248: model #sniper available and 0248: model #maverick available
+    
+    032B: 220@ = create_weapon_pickup #sniper group 15 ammo 60 at -1314.7102 -200.0907 14.1484
+    00A5: Helicopter = create_car #maverick at -1276.8654 -159.1106 14.1484
+    0175: set_car Helicopter Z_angle_to 45.0 
+    0229: set_car Helicopter primary_color_to 0 secondary_color_to 54
+    0186: 300@ = create_marker_above_car Helicopter
+    0165: set_marker 300@ color_to 0
+    03DC: 301@ = create_marker_above_pickup 220@ 
+    0165: set_marker 301@ color_to 0
+    00BC: show_text_highpriority GXT 'M21_022' time 4000 flag 1  // Take your ~r~equipment~w~ and go to the ~r~Villa~w~.
+    0249: release_model #sniper
+    0249: release_model #maverick
+
+    0001: wait 1000 ms 
+    016A: fade 1 time 500
+    01B4: set_player $PLAYER_CHAR can_move 1 
+
+    33@=58000
+    
+    repeat
+    wait 0 ms
+        if 0214: pickup 220@ picked_up
+        then 0164: disable_marker 301@
+        end
+        
+        //-----------SKIP TRIP---------------
+        if 00E1:   player 0 pressed_key 11  // ~k~~CONVERSATION_YES~
+        then $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 221.082
+            $PLAYER_Y = -518.3245
+            $PLAYER_Z = 48.789
+            $PLAYER_ANGLE = 13.0
+            0050: gosub @TELEPORT
+            00A6: destroy_car Helicopter
+            0247: load_model #MAVERICK
+            038B: load_requested_models
+            repeat
+            wait 0 ms
+            until 0248:   model #MAVERICK available 
+            00A5: Helicopter = create_car #MAVERICK at 221.5072 -522.9502 49.4546
+            0249: release_model #MAVERICK
+            0175: set_car Helicopter Z_angle_to 262.0
+            0229: set_car Helicopter primary_color_to 0 secondary_color_to 54
+            0164: disable_marker 300@
+            0164: disable_marker 301@
+            0050: gosub @FADEOUT
+            03E6: remove_text_box 
+            jump @VILLA_START
+        else
+            if and
+            0029:   33@ >= 60000
+            88FE: not text_box_displayed
+            // 0039: $M1_1_ATTEMPTS == 1
+            then
+            03E5: show_text_box 'MSKIP' // You can ~b~skip~w~ the Intro by pressing ~k~~CONVERSATION_YES~.
+            33@=0
+            end
+        end
+    until 00DB: actor $PLAYER_ACTOR in_car Helicopter
+    
+    0164: disable_marker 300@
+    0164: disable_marker 301@
+    041E: set_radio_station 11 // turn off radio
+    03BC: 302@ = create_sphere_at 221.5555 -522.9687 49.4621 radius 10.0 
+    018A: 303@ = create_checkpoint_at 221.5555 -522.9687 49.4621
+    0165: set_marker 303@ color_to 0
+    
+    repeat
+    wait 0 ms
+        if 0039: $OTHER_TASKS_STATUS == 0
+        then 00BC: show_text_highpriority GXT 'M21_001' time 4000 flag 1  // (Joanna) Agent Dark Mission Log, 1846 hours. Last night we got a call from Cassandra de Vries.
+        $OTHER_TASKS_STATUS = 1
+        32@=0
+        end
+        
+        if and
+        0039: $OTHER_TASKS_STATUS == 1
+        0029: 32@ >= 4000
+        then 00BC: show_text_highpriority GXT 'M21_002' time 4000 flag 1  // (Joanna) A dataDyne team has taken Daniel Carrington hostage at his private villa on the coast, and they say they will spare his life in exchange for the AI.
+        $OTHER_TASKS_STATUS = 2
+        32@=0
+        end
+        
+        if and
+        0039: $OTHER_TASKS_STATUS == 2
+        0029: 32@ >= 4000
+        then 00BC: show_text_highpriority GXT 'M21_003' time 4000 flag 1  // (Joanna) Unfortunately we don't have it. Daniel and Dr Caroll were at the villa to discuss 'matters of mutual interest'.
+        $OTHER_TASKS_STATUS = 3
+        32@=0
+        end
+                
+        if and
+        0039: $OTHER_TASKS_STATUS == 3
+        0029: 32@ >= 4000
+        then 00BC: show_text_highpriority GXT 'M21_004' time 4000 flag 1  // (Joanna) It looks like Daniel found a way to hide Dr Caroll inside the villa when the dataDyne hit squad arrived.
+        $OTHER_TASKS_STATUS = 4
+        32@=0
+        end
+                
+        if and
+        0039: $OTHER_TASKS_STATUS == 4
+        0029: 32@ >= 4000
+        then 00BC: show_text_highpriority GXT 'M21_005' time 4000 flag 1  // (Joanna) Hopefully, our phoney negotiator ploy will give me a chance to surprise the dataDyne squad.
+        $OTHER_TASKS_STATUS = 5
+        32@=0
+        end
+                
+        if and
+        0039: $OTHER_TASKS_STATUS == 5
+        0029: 32@ >= 4000
+        then 00BC: show_text_highpriority GXT 'M21_006' time 4000 flag 1  // (Joanna) This time, it's not just my life on the line.
+        $OTHER_TASKS_STATUS = 6
+        end
+        
+        //-----------SKIP TRIP---------------
+        if 00E1:   player 0 pressed_key 11  // ~k~~CONVERSATION_YES~
+        then $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 221.082
+            $PLAYER_Y = -518.3245
+            $PLAYER_Z = 48.789
+            $PLAYER_ANGLE = 13.0
+            0050: gosub @TELEPORT
+            00A6: destroy_car Helicopter
+            0247: load_model #MAVERICK
+            038B: load_requested_models
+            repeat
+            wait 0 ms
+            until 0248:   model #MAVERICK available 
+            00A5: Helicopter = create_car #MAVERICK at 221.5072 -522.9502 49.4546
+            0249: release_model #MAVERICK
+            0175: set_car Helicopter Z_angle_to 262.0
+            0229: set_car Helicopter primary_color_to 0 secondary_color_to 54
+            03BD: destroy_sphere 302@
+            0164: disable_marker 303@
+            0050: gosub @FADEOUT
+            03E6: remove_text_box 
+            jump @VILLA_START
+        else
+            if and
+            0029:   33@ >= 60000
+            88FE: not text_box_displayed
+            // 0039: $M1_1_ATTEMPTS == 1
+            then
+            03E5: show_text_box 'MSKIP' // You can ~b~skip~w~ the Intro by pressing ~k~~CONVERSATION_YES~.
+            33@=0
+            end
+        end
+    until 00FE: actor $PLAYER_ACTOR sphere 0 in_sphere 221.5555 -522.9687 49.4621 radius 10.0 10.0 10.0 
+
+    0050: gosub @SUB_FADE_500MS
+    03BD: destroy_sphere 302@ 
+    0164: disable_marker 303@
+    00AB: put_car Helicopter at 221.5072 -522.9502 49.4546
+    0175: set_car Helicopter Z_angle_to 262.0
+    0362: remove_actor $PLAYER_ACTOR from_car_and_place_at 221.082 -518.3245 48.789
+    0173: set_actor $PLAYER_ACTOR Z_angle_to 13.0 
+
+    :VILLA_START
+    0247: load_model #sniper
+    038B: load_requested_models                                             
+    repeat
+    wait 0 ms
+    until 0248: model #sniper available
+    01B2: give_actor $PLAYER_ACTOR weapon 34 ammo 60
+    01B9: set_actor $PLAYER_ACTOR armed_weapon_to 34 
+    0249: release_model #sniper
+    0050: gosub @FADEOUT
+    00BC: show_text_highpriority GXT 'M21_007' time 4000 flag 1  // (Joanna) I've got to be quick, or they'll kill the negotiator!
+end
+
+//Debug
+
+// Initializing
+060A: create_decision_maker_type 0 store_to 400@    // clean behavior for special actors
+$MOBJ1=0
+$MOBJ2=0
+$MOBJ3=0
+$MOBJ4=0
+$MOBJ5=0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$AREA_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+134@=0 // checkpoint for objective 5 not created
+08E7: disable_entrance_markers 1
+ 
+// Remove peds & cars
+03DE: set_pedestrians_density_multiplier_to 0.0 
+01EB: set_traffic_density_multiplier_to 0.0 
+
+// Wanted level of the mission
+010D: set_player $PLAYER_CHAR wanted_level_to 0 
+01F0: set_max_wanted_level_to 0 
+
+{==============================================================
+EL LAZO WHILE PRINCIPAL
+===============================================================}
+while   0039: $ALLOBJECTIVES == 0
+wait 0 ms
+    {ENTRAR/SALIR DE LAS ZONAS}
+    //0050: gosub @VILLA_CHECK_DOORS
+
+    {CREACION DE ENEMIGOS DEL NIVEL}
+    {00D6: if or 
+    8039: not Floor0EnemysCreated == 0
+    80FE: not actor $PLAYER_ACTOR 0 near_point_3d 372.3281 153.5288 1010.1875 radius 2.0 2.0 2.0 
+    0AA0: gosub_if_false @DEFECTION_FLOOR0_ENEMIES         }
+
+    {00D6: if or 
+    8039: not BasementEnemysCreated == 0
+    80FE: not actor $PLAYER_ACTOR 0 near_point_3d 370.3462 181.3226 1008.3828 radius 2.0 2.0 2.0 
+    0AA0: gosub_if_false @DEFECTION_BASEMENT_ENEMIES       }
+    
+    {AGENT}
+    if
+    0039: $MISSION_DIFFICULTY == 1
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M2_1_OBJECTIVE4  // Save the negotiator(Agent or Special Agent) / Capture dataDyne guard(Perfect Agent)
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M2_1_OBJECTIVE2  // Activate wind generator
+        end
+
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M2_1_OBJECTIVE5  // Rescue Carrington
+        end
+    end
+     
+    {SPECIAL AGENT}
+    if
+    0039: $MISSION_DIFFICULTY == 2
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M2_1_OBJECTIVE4  // Save the negotiator(Agent or Special Agent) / Capture dataDyne guard(Perfect Agent)
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M2_1_OBJECTIVE1  // Eliminate rooftop snipers
+        end
+
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M2_1_OBJECTIVE2  // Activate wind generator
+        end
+    
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M2_1_OBJECTIVE5  // Rescue Carrington
+        end
+    end
+ 
+    {PERFECT AGENT}
+    if
+    0039: $MISSION_DIFFICULTY == 3
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M2_1_OBJECTIVE1  // Eliminate rooftop snipers
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M2_1_OBJECTIVE2  // Activate wind generator
+        end
+    
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M2_1_OBJECTIVE3  // Locate and eliminate dataDyne hackers
+        end
+     
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M2_1_OBJECTIVE4  // Save the negotiator(Agent or Special Agent) / Capture dataDyne guard(Perfect Agent)
+        end
+
+        if 0039:   $MOBJ5 == 0
+        then 0050: gosub @M2_1_OBJECTIVE5  // Rescue Carrington
+        end
+    end
+
+    {CONDICIÓN DE VICTORIA}
+    if and
+    0039: $MISSION_DIFFICULTY == 1  // Agent
+    0039: $MOBJ1 == 1   // Save the negotiator
+    0039: $MOBJ2 == 1   // Activate wind generator
+    0039: $MOBJ3 == 1   // Rescue Carrington
+    then
+    0050: gosub @VILLA_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 2  // Special Agent
+    0039: $MOBJ1 == 1   // Save the negotiator
+    0039: $MOBJ2 == 1   // Eliminate rooftop snipers
+    0039: $MOBJ3 == 1   // Activate wind generator
+    0039: $MOBJ4 == 1   // Rescue Carrington
+    then
+    0050: gosub @VILLA_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+    0039: $MOBJ1 == 1   // Eliminate rooftop snipers
+    0039: $MOBJ2 == 1   // Activate wind generator
+    0039: $MOBJ3 == 1   // Locate and eliminate dataDyne hackers
+    0039: $MOBJ4 == 1   // Capture dataDyne guard
+    0039: $MOBJ5 == 1   // Rescue Carrington
+    then
+    0050: gosub @VILLA_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+
+    {ATENDER OTRAS TAREAS INDEPENDIENTES DE LOS OBJETIVOS}
+    0050: gosub @M2_1_OTHER_TASKS
+
+    {CONDICIÓN DE FRACASO}    
+    00D6: if 
+    8039: not $OTHER_TASKS_STATUS == 99
+    004D: jump_if_false @VILLA_FAIL 
+
+    {DESPLEGAR BARRA DE STATUS DE MISIÓN TRAS PULSACIÓN DE TECLA ESPECIAL -OBJETIVOS COMPLETADOS Y OBJETIVOS FALTANTES-}
+    0050: gosub @MISSION_BAR
+    
+end
+0002: jump @VILLA_PASSED 
+
+{==============================================================
+Maquina de estado de los teletransportadores
+===============================================================}
+:VILLA_CHECK_DOORS   
+0051: return
+
+{=================================================================
+OTHER TASKS
+==================================================================}
+:M2_1_OTHER_TASKS
+if
+0039: $OTHER_TASKS_STATUS == 1
+then
+    if and
+    8039:   not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    0118:   actor 21@ dead
+    then $OTHER_TASKS_STATUS = 99    // Fail Mission 
+    end
+    
+    if 00FE:   actor 21@ sphere 0 in_sphere 288.4317 -563.7224 17.332 radius 2.0 2.0 2.0
+    then
+        0164: disable_marker 342@
+        01C2: remove_references_to_actor 21@ // Like turning an actor into a random pedestrian
+        $OTHER_TASKS_STATUS = 0
+    end
+end
+
+if
+0039: 134@ == 0
+then
+    if and
+    0039: $MISSION_DIFFICULTY == 1  // Agent
+    0039: $MOBJ1 == 1   // Save the negotiator
+    0039: $MOBJ2 == 1   // Activate wind generator
+    then
+    018A: 350@ = create_checkpoint_at 205.4198 -230.6974 1.7786
+    0165: set_marker 350@ color_to 0
+    134@ = 1
+    end
+        
+    if and
+    0039: $MISSION_DIFFICULTY == 2  // Special Agent
+    0039: $MOBJ1 == 1   // Save the negotiator
+    0039: $MOBJ2 == 1   // Eliminate rooftop snipers
+    0039: $MOBJ3 == 1   // Activate wind generator
+    then
+    018A: 350@ = create_checkpoint_at 205.4198 -230.6974 1.7786
+    0165: set_marker 350@ color_to 0
+    134@ = 1
+    end
+        
+    if and
+    0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+    0039: $MOBJ1 == 1   // Eliminate rooftop snipers
+    0039: $MOBJ2 == 1   // Activate wind generator
+    0039: $MOBJ3 == 1   // Locate and eliminate dataDyne hackers
+    0039: $MOBJ4 == 1   // Capture dataDyne guard
+    then
+    018A: 350@ = create_checkpoint_at 205.4198 -230.6974 1.7786
+    0165: set_marker 350@ color_to 0
+    134@ = 1
+    end
+end
+0051: return    
+
+{=================================================================
+OBJECTIVE 1 - Eliminate rooftop snipers
+==================================================================}
+:M2_1_OBJECTIVE1
+if and
+0039: $OBJ4_STATUS == 4  // Save the negotiator / Capture dD Guard
+0039: $OBJ1_STATUS == 0
+then
+    0247: load_model #SWAT
+    0247: load_model #SNIPER
+    038B: load_requested_models 
+
+    repeat
+    wait 0 ms
+    until 0248: model #SWAT available and 0248: model #SWAT available
+    
+    009A: 10@ = create_actor_pedtype 4 model #SWAT at 249.6582 -226.1627 10.5619
+    009A: 11@ = create_actor_pedtype 4 model #SWAT at 360.9738 -110.7638 6.2277
+    009A: 12@ = create_actor_pedtype 4 model #SWAT at 201.4152 -92.4296 8.5247
+    009A: 13@ = create_actor_pedtype 4 model #SWAT at 22.3294 -294.3974 26.8075
+    009A: 14@ = create_actor_pedtype 4 model #SWAT at 158.0542 -12.0051 10.4767
+    0173: set_actor 10@ Z_angle_to 105.6134
+    0173: set_actor 11@ Z_angle_to 137.2603
+    0173: set_actor 12@ Z_angle_to 264.7648
+    0173: set_actor 13@ Z_angle_to 353.7289
+    0173: set_actor 14@ Z_angle_to 257.5347
+    0187: 310@ = create_marker_above_actor 10@ 
+    0187: 311@ = create_marker_above_actor 11@ 
+    0187: 312@ = create_marker_above_actor 12@ 
+    0187: 313@ = create_marker_above_actor 13@ 
+    0187: 314@ = create_marker_above_actor 14@ 
+    07E0: set_marker 310@ type_to 0 
+    07E0: set_marker 311@ type_to 0 
+    07E0: set_marker 312@ type_to 0 
+    07E0: set_marker 313@ type_to 0 
+    07E0: set_marker 314@ type_to 0 
+    077A: set_actor 10@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 11@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 12@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 13@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 14@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    01B2: give_actor 10@ weapon 34 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 11@ weapon 34 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 12@ weapon 34 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 13@ weapon 34 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 14@ weapon 34 ammo 60 // Load the weapon model before using this 
+    01B9: set_actor 10@ armed_weapon_to 34 
+    01B9: set_actor 11@ armed_weapon_to 34 
+    01B9: set_actor 12@ armed_weapon_to 34 
+    01B9: set_actor 13@ armed_weapon_to 34 
+    01B9: set_actor 14@ armed_weapon_to 34 
+    0350: set_actor 10@ maintain_position_when_attacked 1 
+    0350: set_actor 11@ maintain_position_when_attacked 1 
+    0350: set_actor 12@ maintain_position_when_attacked 1 
+    0350: set_actor 13@ maintain_position_when_attacked 1 
+    0350: set_actor 14@ maintain_position_when_attacked 1 
+
+    0249: release_model #SWAT
+    0249: release_model #SNIPER
+    $OBJ1_STATUS = 1
+end
+
+if
+0039: $OBJ1_STATUS == 1
+then
+    if 0118:   actor 10@ dead 
+    then 0164: disable_marker 310@ 
+    end
+
+    if 0118:   actor 11@ dead 
+    then 0164: disable_marker 311@ 
+    end
+
+    if 0118:   actor 12@ dead 
+    then 0164: disable_marker 312@ 
+    end
+
+    if 0118:   actor 13@ dead 
+    then 0164: disable_marker 313@ 
+    end
+
+    if 0118:   actor 14@ dead 
+    then 0164: disable_marker 314@ 
+    end
+
+    if and
+    0118:   actor 10@ dead 
+    0118:   actor 11@ dead 
+    0118:   actor 12@ dead 
+    0118:   actor 13@ dead 
+    0118:   actor 14@ dead 
+    then
+        if
+        0039: $MISSION_DIFFICULTY == 2   // Special Agent
+        then
+        00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2      //Objective 2: Completed
+        $MOBJ2=1
+        else //$MISSION_DIFFICULTY == 3   // Perfect Agent
+        00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2      //Objective 1: Completed
+        $MOBJ1=1
+        end
+        00BC: show_text_highpriority GXT 'M21_015' time 4000 flag 1  // Snipers have been eliminated.
+    end
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 2 - Activate wind generator
+==================================================================}
+:M2_1_OBJECTIVE2
+if and
+0039: $OBJ2_STATUS == 0
+0039: $OBJ4_STATUS == 3  // Rehen a salvo (Agent o Special Agent) ó dD Guardia capturado (Perfect Agent)
+then
+    03BC: 320@ = create_sphere_at 148.929 -167.7113 1.5781 radius 5.0
+    018A: 321@ = create_checkpoint_at 148.929 -167.7113 1.5781
+    0165: set_marker 321@ color_to 0  // red
+    $OBJ2_STATUS = 1
+end
+
+if and      
+0039: $OBJ2_STATUS == 1
+00FE: actor $PLAYER_ACTOR 0 near_point_3d 148.929 -167.7113 1.5781 radius 5.0 5.0 5.0
+then
+    00BC: show_text_highpriority GXT 'M21_008' time 4000 flag 1  // (Joanna) If I get the wind generator back online, I'll get power to the lower basement.
+    03BD: destroy_sphere 320@ 
+    0164: disable_marker 321@
+    03BC: 325@ = create_sphere_at 148.2869 -155.0867 5.0786 radius 1.0 
+    03BC: 326@ = create_sphere_at 169.1994 -164.8952 6.7786 radius 1.0 
+    018A: 322@ = create_checkpoint_at 147.7203 -153.6139 7.1105
+    018A: 323@ = create_checkpoint_at 168.5542 -165.9193 8.8214
+    0165: set_marker 322@ color_to 0
+    0165: set_marker 323@ color_to 0
+    0188: 324@ = create_marker_above_object 236@ // Generator
+    0165: set_marker 324@ color_to 0
+    $OBJ2_STATUS = 2
+end
+
+if and
+0039: $OBJ2_STATUS == 2
+00FE: actor $PLAYER_ACTOR 0 near_point_3d 148.2869 -155.0867 5.0786 radius 1.0 1.0 1.0
+0039: 120@ == 0
+then
+    if
+    00E1:   player 0 pressed_key 15
+    then
+        03E6: remove_text_box
+        0687: clear_actor $PLAYER_ACTOR task
+        04ED: load_animation "crib" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "crib" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+        04EF: release_animation "crib"
+        0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+        00BC: show_text_highpriority GXT 'M21_016' time 4000 flag 1  // Cooling systems have been activated.
+        0164: disable_marker 322@
+        03BD: destroy_sphere 325@ 
+        120@=1
+        0050: gosub @M2_1_OB2_MISSION_CHECK
+    else
+        if and
+        0029:   33@ >= 10000
+        88FE: not text_box_displayed
+        then
+        03E5: show_text_box 'M21_023' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Machine Control Panel~w~.
+        33@=0
+        end
+    end          
+end
+        
+if and
+0039: $OBJ2_STATUS == 2
+00FE: actor $PLAYER_ACTOR 0 near_point_3d 169.1994 -164.8952 6.7786 radius 1.0 1.0 1.0
+0039: 121@ == 0
+then
+    if
+    00E1:   player 0 pressed_key 15
+    then
+        03E6: remove_text_box
+        0687: clear_actor $PLAYER_ACTOR task
+        04ED: load_animation "crib" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "crib" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+        04EF: release_animation "crib"
+        0173: set_actor $PLAYER_ACTOR Z_angle_to 180.0   
+        00BC: show_text_highpriority GXT 'M21_017' time 4000 flag 1  // Power systems have been activated.
+        0164: disable_marker 323@
+        03BD: destroy_sphere 326@ 
+        121@=1
+        0050: gosub @M2_1_OB2_MISSION_CHECK
+    else
+        if and
+        0029:   33@ >= 10000
+        88FE: not text_box_displayed
+        then
+        03E5: show_text_box 'M21_023' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Machine Control Panel~w~.
+        33@=0
+        end
+    end          
+end
+        
+if and
+0039: $OBJ2_STATUS == 2
+0474:   actor $PLAYER_ACTOR near_object_in_cube 236@ radius 2.0 2.0 2.0 flag 0 
+0039: 122@ == 0
+then
+    if
+    00E1:   player 0 pressed_key 15
+    then
+        03E6: remove_text_box
+        0687: clear_actor $PLAYER_ACTOR task
+        04ED: load_animation "crib" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "crib" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+        04EF: release_animation "crib"
+        0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+        00BC: show_text_highpriority GXT 'M21_018' time 4000 flag 1  // Windmill has been reactivated.
+        0164: disable_marker 324@
+        122@=1
+        0050: gosub @M2_1_OB2_MISSION_CHECK
+    else
+        if and
+        0029:   33@ >= 10000
+        88FE: not text_box_displayed
+        then
+        03E5: show_text_box 'M21_023' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Machine Control Panel~w~.
+        33@=0
+        end
+    end          
+end
+0051: return
+
+:M2_1_OB2_MISSION_CHECK
+if and
+0039: 120@ == 1
+0039: 121@ == 1
+0039: 122@ == 1
+then
+    if
+    0039: $MISSION_DIFFICULTY == 2  // Special Agent
+    then
+    00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2      //Objective 3: Completed
+    $MOBJ3=1
+    else                   // Agent or Perfect Agent
+    00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2      //Objective 2: Completed
+    $MOBJ2=1
+    end
+    $OBJ2_STATUS=3
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 3 - Locate and eliminate dataDyne hackers
+==================================================================}
+:M2_1_OBJECTIVE3
+if and
+0038:   $OBJ3_STATUS == 0
+0038:   $OBJ2_STATUS == 3     // Obj 2 - Activate wind generator complete
+then
+    0247: load_model #SWAT
+    0247: load_model #TEC9
+    038B: load_requested_models
+    repeat
+    wait 0 ms
+    until 0248: model #SWAT available and 0248: model #TEC9 available
+    009A: 15@ = create_actor_pedtype 4 model #SWAT at 93.0523 -162.5229 2.5937
+    009A: 16@ = create_actor_pedtype 4 model #SWAT at 90.5779 -164.6397 2.5937
+    009A: 17@ = create_actor_pedtype 4 model #SWAT at 246.0938 -53.3856 1.5776
+    009A: 18@ = create_actor_pedtype 4 model #SWAT at 247.6321 -55.0063 1.5776
+    0173: set_actor 15@ Z_angle_to 0.0
+    0173: set_actor 16@ Z_angle_to 356.0
+    0173: set_actor 17@ Z_angle_to 8.4
+    0173: set_actor 18@ Z_angle_to 0.0
+    0187: 330@ = create_marker_above_actor 15@ 
+    0187: 331@ = create_marker_above_actor 16@ 
+    0187: 332@ = create_marker_above_actor 17@ 
+    0187: 333@ = create_marker_above_actor 18@ 
+    07E0: set_marker 310@ type_to 0 
+    07E0: set_marker 312@ type_to 0 
+    07E0: set_marker 313@ type_to 0 
+    07E0: set_marker 314@ type_to 0 
+    077A: set_actor 15@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 16@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 17@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    077A: set_actor 18@ acquaintance 4 to_actors_pedtype 0 // see ped.dat 
+    01B2: give_actor 15@ weapon 32 ammo 20 // Load the weapon model before using this 
+    01B2: give_actor 16@ weapon 32 ammo 20 // Load the weapon model before using this 
+    01B2: give_actor 17@ weapon 32 ammo 20 // Load the weapon model before using this 
+    01B2: give_actor 18@ weapon 32 ammo 20 // Load the weapon model before using this 
+    01B9: set_actor 15@ armed_weapon_to 32 
+    01B9: set_actor 16@ armed_weapon_to 32 
+    01B9: set_actor 17@ armed_weapon_to 32 
+    01B9: set_actor 18@ armed_weapon_to 32 
+        04ED: load_animation "crib" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "crib" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+        04EF: release_animation "crib"
+    0249: release_model #SWAT
+    0249: release_model #TEC9
+    $OBJ3_STATUS=1
+    32@=0
+end
+
+if and
+0038:   $OBJ3_STATUS == 1
+0029:   32@ >= 4000 
+then
+    00BC: show_text_highpriority GXT 'M21_009' time 4000 flag 1  // (Grimshaw) Joanna, it's Grimshaw. We've got hackers at the villa! You've got to stop them before they get to our files.
+    $OBJ3_STATUS=2
+    32@=0
+end
+
+if and
+0038:   $OBJ3_STATUS == 2
+0029:   32@ >= 4000 
+then
+    $globaltimer=120000
+    03C3: set_timer_to $globaltimer type 1 GXT 'T_LEFT' // Time Left
+    0890: enable_sound_when_timer $globaltimer reach 10 seconds // global_variable 
+    00BC: show_text_highpriority GXT 'M21_010' time 4000 flag 1  // (Joanna) Those hackers have got to be stopped, before I rescue Daniel.
+    $OBJ3_STATUS=3
+end
+
+if
+0038:   $OBJ3_STATUS == 3
+then
+    if and
+    0118:   actor 15@ dead
+    0118:   actor 16@ dead
+    0118:   actor 17@ dead
+    0118:   actor 18@ dead
+    then
+        00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2      //Objective 3: Completed
+        00BC: show_text_highpriority GXT 'M21_019' time 4000 flag 1  // Hackers have been eliminated.
+        $MOBJ3=1
+        014F: stop_timer $globaltimer
+        $OBJ3_STATUS=4
+    end
+    
+    if 0118:   actor 15@ dead
+    then 0164: disable_marker 330@
+    end
+    if 0118:   actor 16@ dead
+    then 0164: disable_marker 331@
+    end
+    if 0118:   actor 17@ dead
+    then 0164: disable_marker 332@
+    end
+    if 0118:   actor 18@ dead
+    then 0164: disable_marker 333@
+    end
+    
+    if
+    0038:   $globaltimer == 0
+    then
+        00BC: show_text_highpriority GXT 'M13_023' time 4000 flag 1  // Hackers got files.
+        $OTHER_TASKS_STATUS=99  // Mission Failed
+    end
+end
+
+0051: return
+
+{=================================================================
+OBJECTIVE 4 - Save the negotiator / Capture dataDyne guard
+==================================================================}
+:M2_1_OBJECTIVE4    
+if
+0039: $OBJ4_STATUS == 0
+then
+    0247: load_model #lvemt1 // el naco
+    0247: load_model #sfemt1 // el prieto
+    0247: load_model #sofybu
+    0247: load_model #tec9
+    038B: load_requested_models
+    repeat
+    wait 0 ms
+    until 0248: model #lvemt1 available and 0248: model #sfemt1 available and 0248: model #tec9 available
+    009A: 19@ = create_actor_pedtype 4 model #lvemt1 at 260.0905 -490.5728 20.3109
+    009A: 20@ = create_actor_pedtype 4 model #sfemt1 at 263.6667 -491.6034 20.3738
+    0173: set_actor 19@ Z_angle_to 20.3109
+    0173: set_actor 20@ Z_angle_to 20.3738
+    01B2: give_actor 19@ weapon 32 ammo 100
+    01B2: give_actor 20@ weapon 32 ammo 100
+    01B9: set_actor 19@ armed_weapon_to 32
+    01B9: set_actor 20@ armed_weapon_to 32
+    if
+    8039: not $MISSION_DIFFICULTY == 3  // Agent or Special Agent
+    then
+        009A: 21@ = create_actor_pedtype 5 model #sofybu at 263.2506 -486.4406 20.4306
+        0173: set_actor 21@ Z_angle_to 20.4306
+        05C4: AS_actor 21@ hands_up 0 ms 
+        0249: release_model #sofybu
+        0187: 342@ = create_marker_above_actor 21@
+        07E0: set_marker 342@ type_to 1  //0: red / 1: blue
+        060B: set_actor 21@ decision_maker_to 400@
+        05C4: AS_actor 21@ hands_up -1 ms
+        0635: AS_actor 19@ aim_at_actor 21@ -1 ms
+        0635: AS_actor 20@ aim_at_actor 21@ -1 ms
+        if 0039: $MISSION_DIFFICULTY == 1   // Agent
+        then 0223: set_actor 21@ health_to 500 
+        end
+    else    // Perfect Agent
+        0635: AS_actor 19@ aim_at_actor $PLAYER_ACTOR -1 ms
+        0635: AS_actor 20@ aim_at_actor $PLAYER_ACTOR -1 ms
+        077A: set_actor 19@ acquaintance 3 to_actors_pedtype 0 // see ped.dat
+        077A: set_actor 20@ acquaintance 3 to_actors_pedtype 0 // see ped.dat
+    end
+    0187: 340@ = create_marker_above_actor 19@
+    0187: 341@ = create_marker_above_actor 20@
+    07E0: set_marker 340@ type_to 0  //0: red / 1: blue
+    07E0: set_marker 341@ type_to 0  //0: red / 1: blue
+    0249: release_model #vbfycrp
+    0249: release_model #vwfycrp
+    0249: release_model #tec9
+    $OBJ4_STATUS = 1
+    32@=0  
+end            
+
+if and
+0039: $OBJ4_STATUS == 1
+0029: 32@ >= 8000
+then
+    if 8039: not $MISSION_DIFFICULTY == 3  // Agent or Special Agent
+    then
+        077A: set_actor 19@ acquaintance 4 to_actors_pedtype 5 // see ped.dat
+        077A: set_actor 20@ acquaintance 4 to_actors_pedtype 5 // see ped.dat
+    else  // Perfect Agent
+        077A: set_actor 19@ acquaintance 4 to_actors_pedtype 0 // see ped.dat
+        077A: set_actor 20@ acquaintance 4 to_actors_pedtype 0 // see ped.dat
+    end
+    $OBJ4_STATUS = 2
+end
+
+if or
+0039: $OBJ4_STATUS == 1
+0039: $OBJ4_STATUS == 2
+then
+    if and
+    0118:   actor 19@ dead 
+    0118:   actor 20@ dead 
+    then
+        if
+        0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+        then
+            00BA: show_text_styled GXT 'MOBJ4' time 2000 style 2      //Objective 4: Completed
+            00BC: show_text_highpriority GXT 'M21_013' time 4000 flag 1  // Enemy guard has been subdued.
+            $MOBJ4=1
+            $OBJ4_STATUS = 4
+        else                   // Agent or Special Agent
+            05D6: clear_scmpath
+            05D7: add_point_to_scmpath 257.8741 -501.2412 20.1657
+            05D7: add_point_to_scmpath 277.1186 -510.3422 20.4224
+            05D7: add_point_to_scmpath 287.2151 -516.8887 20.5064
+            05D7: add_point_to_scmpath 288.4317 -563.7224 17.332
+            05D8: AS_assign_scmpath to_actor 21@ flags 6 0
+            $OBJ4_STATUS = 3
+            $OTHER_TASKS_STATUS=1
+            32@=0
+        end 
+    end
+    if 0118:   actor 19@ dead
+    then 0164: disable_marker 340@ 
+    end
+    if 0118:   actor 20@ dead
+    then 0164: disable_marker 341@ 
+    end
+    if and
+    8039:   not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    0118:   actor 21@ dead
+    then $OTHER_TASKS_STATUS = 99    // Fail Mission 
+    end
+end
+
+if and
+0039: $OBJ4_STATUS == 3
+0029:   32@ >= 5000 
+then
+    00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2      //Objective 1: Completed
+    00BC: show_text_highpriority GXT 'M21_014' time 4000 flag 1  // Negotiator has escaped to safety.
+    $MOBJ1=1
+    $OBJ4_STATUS = 4
+end
+
+0051: return
+
+{=================================================================
+OBJECTIVE 5 - Rescue Carrington
+==================================================================}
+:M2_1_OBJECTIVE5
+if
+0039:   $OBJ5_STATUS == 0
+then
+    if or
+    00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 205.2622 -269.6187 1.5781 radius 3.0 3.0 3.0 
+    00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 195.1212 -259.4582 1.5781 radius 3.0 3.0 3.0 
+    00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 220.3664 -243.7136 1.5781 radius 3.0 3.0 3.0 
+    then
+        if and
+        0039: $MISSION_DIFFICULTY == 1  // Agent
+        0039: $MOBJ1 == 1   // Save the negotiator
+        0039: $MOBJ2 == 1   // Activate wind generator
+        then
+        $OBJ5_STATUS = 1
+        end
+    
+        if and
+        0039: $MISSION_DIFFICULTY == 2  // Special Agent
+        0039: $MOBJ1 == 1   // Save the negotiator
+        0039: $MOBJ2 == 1   // Eliminate rooftop snipers
+        0039: $MOBJ3 == 1   // Activate wind generator
+        then
+        $OBJ5_STATUS = 1
+        end
+    
+        if and
+        0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+        0039: $MOBJ1 == 1   // Eliminate rooftop snipers
+        0039: $MOBJ2 == 1   // Activate wind generator
+        0039: $MOBJ3 == 1   // Locate and eliminate dataDyne hackers
+        0039: $MOBJ4 == 1   // Capture dataDyne guard
+        then
+        $OBJ5_STATUS = 1
+        end
+    end
+end
+
+if
+0039: $OBJ5_STATUS == 1
+then
+    0247: load_model #laemt1
+    0247: load_model #lvemt1
+    0247: load_model #sfemt1
+    0247: load_model #heck1
+    0247: load_model #tec9
+    038B: load_requested_models
+     
+    repeat
+    wait 0 ms
+    until 0248: model #laemt1 available and 0248: model #lvemt1 available and 0248: model #sfemt1 available and 0248: model #heck1 available and 0248: model #tec9 available
+
+    009A: 22@ = create_actor_pedtype 4 model #sfemt1 at 218.0952 -233.5842 1.7786
+    009A: 23@ = create_actor_pedtype 4 model #lvemt1 at 219.2103 -226.0609 1.7786
+    009A: 24@ = create_actor_pedtype 4 model #laemt1 at 197.1047 -226.5494 1.7786
+    0173: set_actor 22@ Z_angle_to 90.0 
+    0173: set_actor 23@ Z_angle_to 90.0 
+    0173: set_actor 24@ Z_angle_to 270.0 
+    01B2: give_actor 22@ weapon 32 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 23@ weapon 32 ammo 60 // Load the weapon model before using this 
+    01B2: give_actor 24@ weapon 32 ammo 60 // Load the weapon model before using this 
+    01B9: set_actor 22@ armed_weapon_to 32 
+    01B9: set_actor 23@ armed_weapon_to 32 
+    01B9: set_actor 24@ armed_weapon_to 32 
+    077A: set_actor 22@ acquaintance 4 to_actors_pedtype 0 // see ped.dat
+    077A: set_actor 23@ acquaintance 4 to_actors_pedtype 0 // see ped.dat
+    077A: set_actor 24@ acquaintance 4 to_actors_pedtype 0 // see ped.dat
+
+    009A: Carrington = create_actor_pedtype 4 model #heck1 at 195.268 -231.2869 1.7786
+    0173: set_actor 22@ Z_angle_to 270.0 
+
+    0249: release_model #laemt1
+    0249: release_model #lvemt1
+    0249: release_model #sfemt1
+    0249: release_model #heck1
+    0249: release_model #tec9
+
+    00BC: show_text_highpriority GXT 'M21_011' time 4000 flag 1  // (Joanna) Here's where they must be holding Daniel.
+    0164: disable_marker 350@
+    $OBJ5_STATUS = 2
+    130@=0
+end
+
+if 0039: $OBJ5_STATUS == 2
+then
+    if 0118:   actor 22@ dead 
+    then 130@+=1
+        if 0039: 130@ == 3
+        then 04A5: store_dead_actor 22@ position_to 131@ 132@ 133@
+        0213: Pickup = create_pickup #KEYCARD type 3 at 131@ 132@ 133@
+        $OBJ5_STATUS = 3
+        end
+    end
+    if 0118:   actor 23@ dead 
+    then 130@+=1
+        if 0039: 130@ == 3
+        then 04A5: store_dead_actor 23@ position_to 131@ 132@ 133@
+        0213: Pickup = create_pickup #KEYCARD type 3 at 131@ 132@ 133@
+        $OBJ5_STATUS = 3
+        end
+    end
+    if 0118:   actor 24@ dead 
+    then 130@+=1
+        if 0039: 130@ == 3
+        then 04A5: store_dead_actor 24@ position_to 131@ 132@ 133@
+        0213: Pickup = create_pickup #KEYCARD type 3 at 131@ 132@ 133@
+        $OBJ5_STATUS = 3
+        end
+    end
+end
+
+if
+0039: $OBJ5_STATUS == 3
+then
+    if
+    0214:   pickup Pickup picked_up
+    then
+        00BC: show_text_highpriority GXT 'M21_020' time 4000 flag 1  // Picked up a door key.
+        $OBJ5_STATUS = 4
+    end
+end
+
+if or
+0039: $OBJ5_STATUS == 2
+0039: $OBJ5_STATUS == 3
+then
+    if 00FE:   actor $PLAYER_ACTOR 0 near_point_3d 201.0598 -236.7609 1.5781 radius 1.0 1.0 1.0
+    then 00BC: show_text_highpriority GXT 'MDRLCK' time 1000 flag 1  // The door is locked.
+    end
+end
+
+if and
+0039: $OBJ5_STATUS == 4
+00FE:   actor $PLAYER_ACTOR 0 near_point_3d 201.0598 -236.7609 1.5781 radius 1.0 1.0 1.0
+then
+    if
+    00E1:   player 0 pressed_key 15
+    then
+        03E6: remove_text_box
+        0687: clear_actor $PLAYER_ACTOR task
+            
+        04ED: load_animation "crib" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "crib" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+        04EF: release_animation "crib"
+    
+        $OBJ5_STATUS = 5
+    else
+        if and
+        0029:   33@ >= 10000
+        88FE: not text_box_displayed
+        then
+        03E5: show_text_box 'M13_027' // Press ~s~ENTER~w~ to Access Electronic Locks.
+        33@=0
+        end
+    end
+end
+              
+if
+0039: $OBJ5_STATUS == 5
+then
+    0176: 135@ = object 253@ Z_angle
+    000F: 135@ -= 1.5
+    if 0031:   135@ >= 175.0
+    then 0177: set_object 253@ Z_angle_to 135@
+    else $OBJ5_STATUS = 6
+    end
+end
+
+if and
+0039: $OBJ5_STATUS == 6
+00FE:   actor $PLAYER_ACTOR 0 near_point_3d 199.9695 -234.5426 1.7786 radius 1.0 1.0 1.0
+then
+    00BC: show_text_highpriority GXT 'M21_021' time 4000 flag 1  // Carrington has been rescued.
+    
+    if 0039: $MISSION_DIFFICULTY == 1 // Agent
+    then 00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2      //Objective 3: Completed
+    end
+    if 0039: $MISSION_DIFFICULTY == 2 // Special Agent
+    then 00BA: show_text_styled GXT 'MOBJ4' time 2000 style 2      //Objective 4: Completed
+    end
+    if 0039: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    then 00BA: show_text_styled GXT 'MOBJ5' time 2000 style 2      //Objective 5: Completed
+    end
+    
+    $OBJ5_STATUS = 7
+    32@=0
+end
+
+if and
+0039: $OBJ5_STATUS == 7
+0029:   32@ >= 5000
+then
+    if 0039: $MISSION_DIFFICULTY == 1 // Agent
+    then $MOBJ3=1
+    end
+    if 0039: $MISSION_DIFFICULTY == 2 // Special Agent
+    then $MOBJ4=1
+    end
+    if 0039: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    then $MOBJ5=1
+    end
+    $OBJ5_STATUS = 8
+end
+0051: return
+
+{=================================================================
+CUTSCENES
+==================================================================}
+:VILLA_OUTRO
+0051: return
+
+{=================================================================
+LOCAL SUBROUTINES
+==================================================================}
+{=================================================================
+Final routines
+==================================================================}
+//––––––––––––-
+:VILLA_PASSED
+0394: play_music 1
+$TUT_MISSIONS_PASSED += 1
+Player.Money($PLAYER_CHAR) += 10000
+01E3: show_text_1number_styled GXT 'M_PASS' number 10000 time 5000 style 1 // MISSION PASSED!~n~~w~$~1~
+return
+
+//––––––––––––-
+:VILLA_FAIL
+00BA: show_text_styled GXT 'M_FAIL' time 5000 style 1 // ~r~MISSION FAILED!
+//0555: remove_weapon 31 from_actor $PLAYER_ACTOR
+return
+
+//––––––––––––-
+:VILLA_CLEANUP
+$ONMISSION = 0
+{CONDICIONES GENERALES}
+010D: set_player $PLAYER_CHAR wanted_level_to 0
+01F0: set_max_wanted_level_to 6 
+{ACTORES}
+01C2: remove_references_to_actor 10@
+01C2: remove_references_to_actor 11@
+01C2: remove_references_to_actor 12@
+01C2: remove_references_to_actor 13@
+01C2: remove_references_to_actor 14@
+01C2: remove_references_to_actor 15@
+01C2: remove_references_to_actor 16@
+01C2: remove_references_to_actor 17@
+01C2: remove_references_to_actor 18@
+01C2: remove_references_to_actor 19@
+01C2: remove_references_to_actor 20@
+01C2: remove_references_to_actor 21@
+01C2: remove_references_to_actor 22@
+01C2: remove_references_to_actor 23@
+01C2: remove_references_to_actor 24@
+01C2: remove_references_to_actor Carrington
+01C3: remove_references_to_car Helicopter
+0215: destroy_pickup 200@
+0215: destroy_pickup 220@
+{OBJECTS}
+{MARKERS / CHECKPOINTS}
+0164: disable_marker 300@
+0164: disable_marker 301@
+0164: disable_marker 303@
+0164: disable_marker 310@
+0164: disable_marker 311@
+0164: disable_marker 312@
+0164: disable_marker 313@
+0164: disable_marker 314@
+0164: disable_marker 321@
+0164: disable_marker 322@
+0164: disable_marker 323@
+0164: disable_marker 324@
+0164: disable_marker 330@
+0164: disable_marker 331@
+0164: disable_marker 332@
+0164: disable_marker 333@
+0164: disable_marker 340@
+0164: disable_marker 341@
+0164: disable_marker 342@
+0164: disable_marker 350@
+08E7: disable_entrance_markers 0
+{SPHERES}
+03BD: destroy_sphere 302@ 
+03BD: destroy_sphere 320@ 
+03BD: destroy_sphere 321@ 
+03BD: destroy_sphere 325@ 
+03BD: destroy_sphere 326@ 
+{DECISIONS}
+065C: release_decision_maker 400@  // Comportamiento limpio para actores especiales
+{VARIABLES GLOBALES}
+$MOBJ1 = 0
+$MOBJ2 = 0
+$MOBJ3 = 0
+$MOBJ4 = 0
+$MOBJ5 = 0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+014F: stop_timer $globaltimer
+mission_cleanup
+return
+
+
+
+//––––-External script 0–––––
+// put your external scripts here

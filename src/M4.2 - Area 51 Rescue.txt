@@ -1,0 +1,2332 @@
+DEFINE MISSIONS 2
+DEFINE MISSION 0 AT @INITIAL
+DEFINE MISSION 1 AT @RESCUE
+
+
+DEFINE EXTERNAL_SCRIPTS -1 // Use -1 in order not to compile AAA script
+//DEFINE SCRIPT {NAME} AT {LABEL} @
+
+DEFINE UNKNOWN_EMPTY_SEGMENT 0
+
+DEFINE UNKNOWN_THREADS_MEMORY 0
+
+{$VERSION 3.0.0000}
+var
+$PLAYER_CHAR: Player
+end // var
+03A4: name_thread 'MAIN'
+01F0: set_max_wanted_level_to 6
+0111: toggle_wasted_busted_check 0
+00C0: set_current_time_hours_to 8 minutes_to 0
+04E4: unknown_refresh_game_renderer_at 1049.9067 1031.3267
+03CB: set_rendering_origin_at 1049.9067 1031.3267 10.685
+0053: $PLAYER_CHAR = create_player #NULL at 1049.9067 1031.3267 10.685 //1453.0439 -1841.0349 13.5469
+01F5: $PLAYER_ACTOR = create_player_actor $PLAYER_CHAR
+07AF: $PLAYER_GROUP = player $PLAYER_CHAR group
+0373: set_camera_directly_behind_player
+01B6: set_weather 0
+0001: wait 0 ms
+087B: set_player $PLAYER_CHAR clothes_texture "PLAYER_FACE" model "HEAD" body_part 1
+087B: set_player $PLAYER_CHAR clothes_texture "JEANSDENIM" model "JEANS" body_part 2
+087B: set_player $PLAYER_CHAR clothes_texture "SNEAKERBINCBLK" model "SNEAKER" body_part 3
+087B: set_player $PLAYER_CHAR clothes_texture "VEST" model "VEST" body_part 0
+070D: rebuild_player $PLAYER_CHAR
+01B4: toggle_player $PLAYER_CHAR can_move 0
+016A: fade 0 time 0
+04BB: select_interior 0
+0629: change_integer_stat 181 to 4
+016C: restart_if_wasted_at 2027.77 -1420.52 15.99 angle 137.0 town_number 0
+016D: restart_if_busted_at 1550.68 -1675.49 14.51 angle 90.0 town_number 0
+0180: set_on_mission_flag_to $ONMISSION // Note: your missions have to use the variable defined here
+0004: $DEFAULT_WAIT_TIME = 250
+03E6: remove_text_box
+
+023C: load_special_actor 'marisa' as 1
+038B: load_requested_models
+repeat
+wait 0 ms
+until 023D:   special_actor 1 loaded
+09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+0296: unload_special_actor 1
+
+wait 1000 ms
+016A: fade 1 time 2000
+01B4: toggle_player $PLAYER_CHAR can_move 1
+0417: start_mission 0 // Initial
+wait 0
+// put your create_thread commands here
+00D7: create_thread @CI_MISSIONS_SNIFFER
+
+:MAIN_LOOP
+0001: wait $DEFAULT_WAIT_TIME ms
+0002: jump @MAIN_LOOP
+
+
+
+
+{==============================================================
+GLOBAL SUBROUTINES
+===============================================================}
+:SUB_FADE_500MS
+0169: set_fade_color_RGB 0 0 0 
+016A: fade 0 time 500 
+
+:LITCAS_282
+00D6: if 
+016B:   fading 
+004D: jump_if_false @LITCAS_306 
+0001: wait 0 ms 
+0002: jump @LITCAS_282 
+
+:LITCAS_306
+0051: return 
+//------------------------
+:TELEPORT
+// Seleccionando Interior y colocándo al jugador en él
+0050: gosub @SUB_FADE_500MS 
+01B4: toggle_player $PLAYER_CHAR can_move 0
+04BB: select_interior $ACTIVE_INTERIOR 
+0860: link_actor $PLAYER_ACTOR to_interior $ACTIVE_INTERIOR 
+04E4: unknown_refresh_game_renderer_at $PLAYER_X $PLAYER_Y 
+03CB: set_rendering_origin_at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+//04F9: set_interior 1 color_to 0 
+00A1: put_actor $PLAYER_ACTOR at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+0173: set_actor $PLAYER_ACTOR Z_angle_to $PLAYER_ANGLE 
+0373: set_camera_directly_behind_player 
+//02EB: restore_camera_with_jumpcut
+0051: return
+//------------------------
+:FADEOUT
+0001: wait 1000 ms 
+016A: fade 1 time 1000 
+01B4: set_player $PLAYER_CHAR can_move 1
+0051: return
+//------------------------
+:JOANNA_RESPONSE
+0209: $RAND = random_int_in_ranges 0 3
+00D6: if
+0039:   $RAND == 0
+004D: jump_if_false @J01 
+00BC: show_text_highpriority GXT 'MJO_1' time 4000 flag 1  // (Joanna) Received.
+:J01
+00D6: if
+0039:   $RAND == 1
+004D: jump_if_false @J02 
+00BC: show_text_highpriority GXT 'MJO_2' time 4000 flag 1  // (Joanna) Understood.
+:J02
+00D6: if
+0039:   $RAND == 2
+004D: jump_if_false @J03 
+00BC: show_text_highpriority GXT 'MJO_3' time 4000 flag 1  // (Joanna) Confirmed.
+:J03
+00D6: if
+0039:   $RAND == 3
+004D: jump_if_false @J04 
+00BC: show_text_highpriority GXT 'MJO_4' time 4000 flag 1  // (Joanna) Affirmative.
+:J04
+0051: return  
+//------------------------
+:SELECT_DIFFICULTY
+01B4: set_player $PLAYER_CHAR can_move 0
+0512:  show_permanent_text_box 'MHLP01'
+08D4: $SEL_DIF_MENU = create_panel_with_title 'MTBL01' position 29.0 145.0 width {220.0} 300.0 columns 1 interactive 1 background 1 alignment 1
+08DB:  set_panel $SEL_DIF_MENU column 0 header s$MISSION data 'MDIF1' 'MDIF2' 'MDIF3' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY'
+repeat
+wait 0 ms
+until 00E1: player 0 pressed_key 16 
+08D7: $choice = panel $SEL_DIF_MENU active_row
+08DA: remove_panel $SEL_DIF_MENU
+03E6: remove text box
+if $choice == 0
+then
+$MISSION_DIFFICULTY = 1          // Agent
+end
+if $choice == 1
+then
+$MISSION_DIFFICULTY = 2          // Special Agent
+end
+if $choice == 2
+then
+$MISSION_DIFFICULTY = 3          // Perfect Agent
+end
+0051: return  
+//------------------------
+:MISSION_BAR
+if 00E1:   player 0 pressed_key 11    //~k~~CONVERSATION_YES~
+then
+    015D: set_gamespeed  0.001 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 0 
+
+    038E: draw_box_position 400.0 270.0 size 400.0 220.0 RGBA 123 34 111 75
+    038E: draw_box_position 400.0 185.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.5 1.2
+    0343: set_text_draw_linewidth 600.0 
+    033E: set_draw_text_position 225.0 170.0 GXT s$MISSION    // Mission Name
+
+    if 85AD:   not s$OBJ1 == 'DUMMY'
+    then
+        // Objective 1
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 200.0 GXT 'OBJ1'
+        
+        // Objective 1 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 200.0 GXT s$OBJ1
+        
+        // Objective 1 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ1 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ2 == 'DUMMY'
+    then
+        // Objective 2
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 225.0 GXT 'OBJ2'
+        
+        // Objective 2 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 225.0 GXT s$OBJ2
+        
+        // Objective 2 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ2 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ3 == 'DUMMY'
+    then
+        // Objective 3
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 250.0 GXT 'OBJ3'
+        
+        // Objective 3 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 250.0 GXT s$OBJ3
+        
+        // Objective 3 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ3 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ4 == 'DUMMY'
+    then
+        // Objective 4
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 275.0 GXT 'OBJ4'
+        
+        // Objective 4 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 275.0 GXT s$OBJ4
+        
+        // Objective 4 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ4 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ5 == 'DUMMY'
+    then
+        // Objective 5
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 300.0 GXT 'OBJ5'
+        
+        // Objective 5 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 300.0 GXT s$OBJ5
+        
+        // Objective 5 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ5 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    038E: draw_box_position 400.0 337.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.4 1.0
+    0343: set_text_draw_linewidth 600.0 
+    03E4: enable_text_draw_align_right 1
+    033E: set_draw_text_position 540.0 340.0 GXT 'OBTB01'     // Abort Mission
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+        
+    repeat
+    wait 0 ms
+    until 00E1:   player 0 pressed_key 11
+
+    015D: set_gamespeed  1.0 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 1
+    03F0: enable_text_draw 0 
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+end
+0051: return  
+
+//------------------------
+:ENABLE_CAMSPY
+if and
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+02D8:   actor $PLAYER_ACTOR current_weapon == 43 // Cam
+0038:   $CAMSPY_STATUS == 0 // Player has not released camspy
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $player_interior // the interior where player lies
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0009: $newposition[0] += 1.0
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0009: $newposition[1] += 1.0
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+    009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL02 at $oldposition[0] $oldposition[1] $oldposition[2]
+    0173: set_actor $CAMSPY Z_angle_to $old_angle
+    060A: create_decision_maker_type 0 store_to $clean
+    060B: set_actor $CAMSPY decision_maker_to $clean
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    01B9: set_actor $PLAYER_ACTOR armed_weapon_to 0 // Unarmed
+    $CAMSPY_STATUS=1
+    0086: $old_area_status = $AREA_STATUS // (float)
+end
+
+if and
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+0039:   $CAMSPY_STATUS == 1 // Player IS camspy
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    0086: $new_angle = $old_angle // (float) 
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $camspy_interior // the interior where camspy lies
+
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+
+    04BB: select_interior $player_interior // the interior where player lies
+    0860: link_actor $PLAYER_ACTOR to_interior $player_interior 
+    04E4: unknown_refresh_game_renderer_at $newposition[0] $newposition[1]
+    03CB: set_rendering_origin_at $newposition[0] $newposition[1] $newposition[2]
+    009B: destroy_actor $CAMSPY
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL02
+    if 003A:   $player_interior == $camspy_interior // (int)
+    then
+        009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL01 at $oldposition[0] $oldposition[1] $oldposition[2]
+        0173: set_actor $CAMSPY Z_angle_to $old_angle
+        060A: create_decision_maker_type 0 store_to $clean
+        060B: set_actor $CAMSPY decision_maker_to $clean
+    end
+    0173: set_actor $PLAYER_ACTOR Z_angle_to $new_angle
+    01B9: set_actor $PLAYER_ACTOR armed_weapon_to 43 // Cam
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    $CAMSPY_STATUS=2
+    0086: $current_area_status = $AREA_STATUS // (float)
+    0086: $AREA_STATUS = $old_area_status // (float)
+    0086: $old_area_status = $current_area_status // (float)
+    $m_entrance_created=0
+end
+
+if and
+0039:   $CAMSPY_STATUS == 1 // Player IS camspy
+82D8:   not actor $PLAYER_ACTOR current_weapon == 43 // Cam
+then 01B9: set_actor $PLAYER_ACTOR armed_weapon_to 43 // Cam
+end
+
+if and
+0039:   $CAMSPY_STATUS == 2 // Player released camspy and has not taken it
+003B:   $player_interior == $camspy_interior // (int)
+then
+    if 00F2:   actor $PLAYER_ACTOR near_actor $CAMSPY radius 1.0 1.0 1.0
+    then
+        01C2: remove_references_to_actor $CAMSPY // Like turning an actor into a random pedestrian 
+        009B: destroy_actor $CAMSPY
+        00BC: show_text_highpriority GXT 'CAMSPY1' time 4000 flag 1  // Picked up your CamSpy.
+        017B: set_actor $PLAYER_ACTOR weapon 43 ammo_to 20 
+        $CAMSPY_STATUS=0
+    end
+end
+
+if and
+0039:   $CAMSPY_STATUS == 2 // Player released camspy and has not taken it
+02D8:   actor $PLAYER_ACTOR current_weapon == 43 // Cam
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    0086: $new_angle = $old_angle // (float) 
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $player_interior // the interior where player lies
+
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+
+    04BB: select_interior $camspy_interior // the interior where camspy lies
+    0860: link_actor $PLAYER_ACTOR to_interior $camspy_interior 
+    04E4: unknown_refresh_game_renderer_at $newposition[0] $newposition[1]
+    03CB: set_rendering_origin_at $newposition[0] $newposition[1] $newposition[2]
+    009B: destroy_actor $CAMSPY
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+    0173: set_actor $PLAYER_ACTOR Z_angle_to $new_angle
+    if 003B:   $player_interior == $camspy_interior // (int) 
+    then
+        009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL02 at $oldposition[0] $oldposition[1] $oldposition[2]
+        0173: set_actor $CAMSPY Z_angle_to $old_angle
+        060A: create_decision_maker_type 0 store_to $clean
+        060B: set_actor $CAMSPY decision_maker_to $clean
+    end
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    $CAMSPY_STATUS=1
+    0086: $current_area_status = $AREA_STATUS // (float)
+    0086: $AREA_STATUS = $old_area_status // (float)
+    0086: $old_area_status = $current_area_status // (float)
+    $m_entrance_created=0
+end
+0051: return  
+
+
+
+
+
+{==============================================================
+MISSION SNIFFER
+===============================================================}
+// put your mods (threads) here
+:CI_MISSIONS_SNIFFER
+thread "CI_SNIFF"
+$MARKER_CARRINGTON_INSTITUTE = Marker.CreateIconAndSphere(42, $X_CARRINGTON_INSTITUTE, $Y_CARRINGTON_INSTITUTE, $Z_CARRINGTON_INSTITUTE)
+repeat
+wait $DEFAULT_WAIT_TIME
+if and
+player.Defined($PLAYER_CHAR)
+$ONMISSION == 0
+then
+    if and
+        00FF: actor $PLAYER_ACTOR sphere 0 in_sphere $X_CARRINGTON_INSTITUTE $Y_CARRINGTON_INSTITUTE $Z_CARRINGTON_INSTITUTE radius 1.0 1.0 2.0 on_foot
+        Player.Controllable($PLAYER_CHAR)
+        $TUT_MISSIONS_PASSED == 0
+    then
+        054C: use_GXT_table 'PD'
+        $ONMISSION = 1
+        s$MISSION = 'M4_2' // Area 51: Rescue
+        0050: gosub @SELECT_DIFFICULTY
+        00BA: show_text_styled GXT 'M4_2' time 1000 style 2 // Area 51: Rescue
+        01B4: toggle_player $PLAYER_CHAR can_move 0
+        0050: gosub @SUB_FADE_500MS 
+        start_mission 1
+    end
+end
+until $TUT_MISSIONS_PASSED == 1
+marker.Disable($MARKER_CARRINGTON_INSTITUTE)
+end_thread
+
+//––––-Mission 0–––––
+{==============================================================
+GLOBAL INITIALIZATIONS
+===============================================================}
+:INITIAL
+$TUT_MISSIONS_PASSED = 0
+$ONMISSION = 0
+     
+$X_CARRINGTON_INSTITUTE = 1046.3639
+$Y_CARRINGTON_INSTITUTE = 1015.7791
+$Z_CARRINGTON_INSTITUTE = 11.0
+//0629: change_integer_stat 225 to 999 // capacidad pulmonar al máximo jolines tío no la empalmeis hostia!
+
+model.Load(#FCR900)
+038B: load_requested_models
+
+:INITIAL_LOAD
+wait 0 ms
+if
+model.Available(#FCR900)
+004D: jump_if_false @INITIAL_LOAD
+
+0674: set_car_model #FCR900 numberplate "DARK_"
+$darkbike = car.Create(#FCR900,1452.9561, -1837.4128, 13.5469)
+end_thread
+
+
+
+
+
+
+//––––-Mission 1–––––
+{==============================================================
+AREA 51: RESCUE
+===============================================================}
+// Mission wrapper
+:RESCUE
+thread 'M4_2'
+gosub @RESCUE_MAIN
+if wasted_or_busted
+then
+gosub @RESCUE_FAIL
+end
+gosub @RESCUE_CLEANUP
+end_thread
+
+//––––––––––––-
+:RESCUE_MAIN
+const         
+{==============================================================================
+Nomenclatura propuesta:     0-99: actors,vehicles 
+                            100-199: flags y variables numéricas de uso general
+                            200-299: objects or pickups
+                            300-399: markers/spheres/checkpoints
+                            400-499: decision makers, rutas y comportamientos
+===============================================================================     }
+    // ======= Entrance Markers
+    HangarFacility = 300@
+    FacilityHangar = 301@
+    FacilityShowers = 302@
+    ShowersFacility = 303@
+    // ======= Obj1
+    // 310@, 311@, 312@: Markers
+    // 112@, 113@: Objects health - 114@, 115@: Flags
+    // ======= Obj2
+    // 20@: Maian body
+    // 120@: Flag, 121@: Random integer
+    // 320@: Marker above actor
+    // 122@, 123@, 124@: Position of Maian - 125@: Angle of Maian
+    // 126@, 127@, 128@: Position of player
+    // 271@: Extra object
+    // ======= Obj3
+    // 30@: Actor - 330@: Marker above actor
+    // 280@: Pickup - 331@: Marker above Pickup
+    // 130@, 131@, 132@: Actor position
+    // 133@: Status
+    // ======= Obj4
+    // 40@, 41@: Actors
+    // 340@: Marker above actor
+    // 281@: Pickup - 341@: Marker above Pickup
+    // 140@, 141@: Height of Doors
+    // 142@: Flag
+    // 143@, 144@, 145@: Position of dead actor
+    // ======= Obj5
+    // 350@: Marker
+    // 150@: Height of door
+    // 270@: Extra object
+    // ======= General
+    // 0@: Charge Vehicle
+    // 100@: Box Exploded - 101@, 102@, 103@: Position of Box
+    // 104@, 105@, 106@: Position of charge car - 107@: Angle of car
+    // 108@, 109@: Height of bridge and elevator - 199@, 198@, 197@: Dummy Position
+    // 306@: Marker - 300@: Sphere, 301@: Checkpoint
+    // 302: Sphere - 303: Checkpoint
+    // 110@: Angle of stopped car
+    // 304@: Box Marker - 305@: Vehicle Marker
+    // 111@: Flag actor in car
+    ExplosiveBox = 299@
+end                                                                                                                                                            // ======= Obj1
+
+04BB: select_interior 0 
+0860: link_actor $PLAYER_ACTOR to_interior 0 
+
+// Wanted level of the mission
+010D: set_player $PLAYER_CHAR wanted_level_to 0 
+01F0: set_max_wanted_level_to 0 
+
+// Initialize Mission Time
+//00C0: set_current_time_hours_to 21 minutes_to 0
+
+// Initialize global variables for Mission Status Bar
+if 0038:   $MISSION_DIFFICULTY == 1  // Agent
+then s$OBJ1='M42OB3'  // Obtain and use lab technician Disguise
+s$OBJ2='M42OB4'       // Gain access to autopsy lab
+s$OBJ3='M42OB5'       // Rescue the crash survivor
+s$OBJ4='DUMMY'
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 2  // Special Agent
+then s$OBJ1='M42OB2'  // Locate conspiracy evidence
+s$OBJ2='M42OB3'       // Obtain and use lab technician Disguise
+s$OBJ3='M42OB4'       // Gain access to autopsy lab
+s$OBJ4='M42OB5'       // Rescue the crash survivor
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 3  // Perfect Agent
+then s$OBJ1='M42OB1'  // Destroy computer records
+s$OBJ2='M42OB2'       // Locate conspiracy evidence
+s$OBJ3='M42OB3'       // Obtain and use lab technician Disguise
+s$OBJ4='M42OB4'       // Gain access to autopsy lab
+s$OBJ5='M42OB5'       // Rescue the crash survivor
+end
+
+//Spawn Objects
+
+//Spawn actor & Load models
+04BB: select_interior 18 // Warehouse 2
+0860: link_actor $PLAYER_ACTOR to_interior 18
+04E4: unknown_refresh_game_renderer_at 1306.8707 -55.339
+03CB: set_rendering_origin_at 1306.8707 -55.339 1002.4979
+00A1: put_actor $PLAYER_ACTOR at 1306.8707 -55.339 1002.4979
+0173: set_actor $PLAYER_ACTOR Z_angle_to 90.0
+0373: set_camera_directly_behind_player 
+    
+0247: load_model #silenced
+038B: load_requested_models                                             
+repeat
+wait 0 ms
+until 0248: model #silenced available    
+01B2: give_actor $PLAYER_ACTOR weapon 23 ammo 60 // Load the weapon model before using this 
+01B9: set_actor $PLAYER_ACTOR armed_weapon_to 23 // Silenced 
+0249: release_model #silenced
+
+// Initial position of the Car
+104@ = 1300.1471
+105@ = -58.6459
+106@ = 1002.5023
+107@ = 0.0
+
+$AREA_STATUS=0 // Hangar
+0050: gosub @RESCUE_CHECK_DOORS
+
+{0001: wait 1000 ms 
+016A: fade 1 time 500}
+01B4: set_player $PLAYER_CHAR can_move 1 
+
+//0050: gosub @SUB_FADE_500MS
+
+:RESCUE_START
+0001: wait 1000 ms 
+016A: fade 1 time 500
+01B4: set_player $PLAYER_CHAR can_move 1 
+0050: gosub @FADEOUT
+
+//Debug
+
+// Initializing
+060A: create_decision_maker_type 0 store_to 400@    // clean behavior for special actors
+$MOBJ1=0
+$MOBJ2=0
+$MOBJ3=0
+$MOBJ4=0
+$MOBJ5=0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$AREA_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+$globaltimer=0
+$m_entrance_created=1
+08E7: disable_entrance_markers 1
+
+{==============================================================
+AREA 51: RESCUE - MAIN LOOP
+===============================================================}
+repeat
+wait 0 ms
+    //--ENTRAR/SALIR DE LAS ZONAS--
+    0050: gosub @RESCUE_CHECK_DOORS
+    
+    //--AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 1
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_2_OBJECTIVE3  // Obtain and use lab technician Disguise
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_2_OBJECTIVE4  // Gain access to autopsy lab
+        end
+
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_2_OBJECTIVE5  // Rescue the crash survivor
+        end
+    end
+     
+    //--SPECIAL AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 2
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_2_OBJECTIVE2  // Locate conspiracy evidence
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_2_OBJECTIVE3  // Obtain and use lab technician Disguise
+        end
+     
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_2_OBJECTIVE4  // Gain access to autopsy lab
+        end
+
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M4_2_OBJECTIVE5  // Rescue the crash survivor
+        end
+    end
+ 
+    //--PERFECT AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 3
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_2_OBJECTIVE1  // Destroy computer records
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_2_OBJECTIVE2  // Locate conspiracy evidence
+        end
+    
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_2_OBJECTIVE3  // Obtain and use lab technician Disguise
+        end
+     
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M4_2_OBJECTIVE4  // Gain access to autopsy lab
+        end
+
+        if 0039:   $MOBJ5 == 0
+        then 0050: gosub @M4_2_OBJECTIVE5  // Rescue the crash survivor
+        end
+    end
+
+    //--CONDICIÓN DE VICTORIA--
+    if and
+    0039: $MISSION_DIFFICULTY == 1  // Agent
+    0039: $MOBJ1 == 1   // Obtain and use lab technician Disguise
+    0039: $MOBJ2 == 1   // Gain access to autopsy lab
+    0039: $MOBJ3 == 1   // Rescue the crash survivor
+    then
+    0050: gosub @RESCUE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 2  // Special Agent
+    0039: $MOBJ1 == 1   // Locate conspiracy evidence
+    0039: $MOBJ2 == 1   // Obtain and use lab technician Disguise
+    0039: $MOBJ3 == 1   // Gain access to autopsy lab
+    0039: $MOBJ4 == 1   // Rescue the crash survivor
+    then
+    0050: gosub @RESCUE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+    0039: $MOBJ1 == 1   // Destroy computer records
+    0039: $MOBJ2 == 1   // Locate conspiracy evidence
+    0039: $MOBJ3 == 1   // Obtain and use lab technician Disguise
+    0039: $MOBJ4 == 1   // Gain access to autopsy lab
+    0039: $MOBJ5 == 1   // Rescue the crash survivor
+    then
+    0050: gosub @RESCUE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+
+    //ATENDER OTRAS TAREAS INDEPENDIENTES DE LOS OBJETIVOS
+    0050: gosub @M4_2_OTHER_TASKS
+
+    //--CONDICIÓN DE FRACASO--    
+    00D6: if 
+    8039: not $OTHER_TASKS_STATUS == 99
+    004D: jump_if_false @RESCUE_FAIL 
+
+    //DESPLEGAR BARRA DE STATUS DE MISIÓN TRAS PULSACIÓN DE TECLA ESPECIAL -OBJETIVOS COMPLETADOS Y OBJETIVOS FALTANTES-
+    0050: gosub @MISSION_BAR
+
+until 0039: $ALLOBJECTIVES == 1
+0002: jump @RESCUE_PASSED 
+
+{==============================================================
+Maquina de estado de los teletransportadores
+===============================================================}
+:RESCUE_CHECK_DOORS
+if 0038: $AREA_STATUS == 0     // Hangar
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: HangarFacility = create_entrance_marker_at 1307.1196 7.2655 1008.3984 color 14
+        0050: gosub @RESCUE_REMOVE_OBJECTS
+        0050: gosub @RESCUE_SPAWN_OBJECTS_HANGAR
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1307.1196 7.2655 1008.3984 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 1    // Facility
+            0050: gosub @RESCUE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 255.649
+            $PLAYER_Y = 1802.0736
+            $PLAYER_Z = 7.4857
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Facility
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 1     // Facility
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: FacilityHangar = create_entrance_marker_at 256.7956 1802.0039 7.5418 color 14
+        if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+        then 0A40: FacilityShowers = create_entrance_marker_at 287.568 1813.1547 4.7104 color 14
+        end
+        if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        then 0A40: FacilityShowers = create_entrance_marker_at 297.7193 1843.7509 7.7341 color 14
+        end
+        0050: gosub @RESCUE_REMOVE_OBJECTS
+        0050: gosub @RESCUE_SPAWN_OBJECTS_FACILITY
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 256.7956 1802.0039 7.5418 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Hangar
+            0050: gosub @RESCUE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1307.2059
+            $PLAYER_Y = 5.3156
+            $PLAYER_Z = 1008.3984
+            $PLAYER_ANGLE = 180.0
+            0050: gosub @TELEPORT // Teleport to Hangar
+        end  
+        if and
+        0038: $MISSION_DIFFICULTY == 2 // Special Agent
+        00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 287.568 1813.1547 4.7104 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 2    // Showers
+            0050: gosub @RESCUE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 5
+            $PLAYER_X = 1302.0275
+            $PLAYER_Y = -782.1781
+            $PLAYER_Z = 1084.0078
+            $PLAYER_ANGLE = 0.0
+            0050: gosub @TELEPORT // Teleport to Showers
+        end  
+        if and
+        0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 297.7193 1843.7509 7.7341 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 2    // Showers
+            0050: gosub @RESCUE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 5
+            $PLAYER_X = 1249.9128
+            $PLAYER_Y = -771.8137
+            $PLAYER_Z = 1084.0078
+            $PLAYER_ANGLE = 0.0
+            0050: gosub @TELEPORT // Teleport to Showers
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 2     // Showers
+then
+    if 0038:   $m_entrance_created == 0
+    then
+        0A40: ShowersFacility = create_entrance_marker_at 1302.042 -783.1609 1084.0078 color 14
+        0050: gosub @RESCUE_REMOVE_OBJECTS
+        0050: gosub @RESCUE_SPAWN_OBJECTS_SHOWERS
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1302.042 -783.1609 1084.0078 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 1    // Facility
+            0050: gosub @RESCUE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 287.3253  
+            $PLAYER_Y = 1818.0109
+            $PLAYER_Z = 4.7104
+            $PLAYER_ANGLE = 0.0
+            0050: gosub @TELEPORT // Teleport to Facility
+        end  
+    end
+end
+0051: return
+
+:RESCUE_REMOVE_MARKERS
+0A41: destroy_entrance_marker HangarFacility 
+0A41: destroy_entrance_marker FacilityHangar 
+0A41: destroy_entrance_marker FacilityShowers 
+0A41: destroy_entrance_marker ShowersFacility 
+0051: return
+
+:RESCUE_REMOVE_OBJECTS
+0108: destroy_object 200@ 
+0108: destroy_object 201@ 
+0108: destroy_object 202@ 
+0108: destroy_object 203@ 
+0108: destroy_object 204@ 
+0108: destroy_object 205@ 
+0108: destroy_object 206@ 
+0108: destroy_object 207@ 
+0108: destroy_object 208@ 
+0108: destroy_object 209@ 
+0108: destroy_object 210@ 
+0108: destroy_object 211@ 
+0108: destroy_object 212@ 
+0108: destroy_object 213@ 
+0108: destroy_object 214@ 
+0108: destroy_object 215@ 
+0108: destroy_object 216@ 
+0108: destroy_object 217@ 
+0108: destroy_object 218@ 
+0108: destroy_object 219@ 
+0108: destroy_object 220@ 
+0108: destroy_object 221@ 
+0108: destroy_object 222@ 
+0108: destroy_object 223@ 
+0108: destroy_object 224@ 
+0108: destroy_object 225@ 
+0108: destroy_object 226@ 
+0108: destroy_object 227@ 
+0108: destroy_object 228@ 
+0108: destroy_object 229@ 
+0108: destroy_object 230@ 
+0108: destroy_object 231@ 
+0108: destroy_object 232@ 
+0108: destroy_object 233@ 
+0108: destroy_object 234@ 
+0108: destroy_object 235@ 
+0108: destroy_object 236@ 
+0108: destroy_object 237@ 
+0108: destroy_object 238@ 
+0108: destroy_object 239@ 
+0108: destroy_object 240@ 
+0108: destroy_object 241@ 
+//0108: destroy_object 242@ 
+0108: destroy_object 243@ 
+0108: destroy_object 244@ 
+//0108: destroy_object 245@ 
+//0108: destroy_object 246@ 
+//0108: destroy_object 247@ 
+0108: destroy_object 248@ 
+0108: destroy_object 249@ 
+0108: destroy_object 250@ 
+0108: destroy_object 251@ 
+0108: destroy_object 252@ 
+0108: destroy_object 253@ 
+0108: destroy_object 254@ 
+0108: destroy_object 255@ 
+0108: destroy_object 256@ 
+0108: destroy_object 257@ 
+0108: destroy_object 258@ 
+0108: destroy_object 259@ 
+0108: destroy_object 260@ 
+0108: destroy_object 261@ 
+0108: destroy_object 262@ 
+0108: destroy_object 263@ 
+0108: destroy_object 264@ 
+0108: destroy_object 265@ 
+0108: destroy_object 266@ 
+0108: destroy_object 267@ 
+0108: destroy_object 268@ 
+0108: destroy_object 269@ 
+0108: destroy_object 270@ 
+0051: return
+
+:RESCUE_SPAWN_OBJECTS_HANGAR
+{029B: ExplosiveBox = init_object #CJ_CARDBRD_PICKUP at 1295.6 -55.5475 1002.0
+0453: set_object ExplosiveBox XY_rotation 0.0 0.0 angle 0.0}
+029B: 200@ = init_object #imy_bbox at 1297.63 -36.0115 1001.83
+0453: set_object 200@ XY_rotation 0.0 0.0 angle 2.2
+029B: 201@ = init_object #imy_bbox at 1297.63 -35.9115 1000.53
+0453: set_object 201@ XY_rotation 0.0 0.0 angle 0.0
+029B: 202@ = init_object #imy_bbox at 1297.63 -35.9115 1003.03
+0453: set_object 202@ XY_rotation 0.0 0.0 angle 356.0
+029B: 203@ = init_object #imy_bbox at 1279.33 -35.9115 1000.53
+0453: set_object 203@ XY_rotation 0.0 0.0 angle 356.0
+029B: 204@ = init_object #imy_bbox at 1279.33 -35.9115 1001.73
+0453: set_object 204@ XY_rotation 0.0 0.0 angle 2.0
+029B: 205@ = init_object #imy_bbox at 1279.33 -35.9115 1002.93
+0453: set_object 205@ XY_rotation 0.0 0.0 angle 0.0
+029B: 206@ = init_object #imy_bbox at 1260.33 -35.9115 1000.53
+0453: set_object 206@ XY_rotation 0.0 0.0 angle 0.0
+029B: 207@ = init_object #imy_bbox at 1260.23 -35.8115 1001.73
+0453: set_object 207@ XY_rotation 0.0 0.0 angle 3.0
+029B: 208@ = init_object #imy_bbox at 1260.23 -36.0115 1002.93
+0453: set_object 208@ XY_rotation 0.0 0.0 angle 358.0
+029B: 209@ = init_object #imy_bbox at 1297.11 -23.042 1000.53
+0453: set_object 209@ XY_rotation 0.0 0.0 angle 358.0
+029B: 210@ = init_object #imy_bbox at 1297.11 -23.242 1001.73
+0453: set_object 210@ XY_rotation 0.0 0.0 angle 3.0
+029B: 211@ = init_object #imy_bbox at 1297.11 -23.242 1002.93
+0453: set_object 211@ XY_rotation 0.0 0.0 angle 357.0
+029B: 212@ = init_object #imy_bbox at 1278.81 -23.042 1000.53
+0453: set_object 212@ XY_rotation 0.0 0.0 angle 357.0
+029B: 213@ = init_object #imy_bbox at 1278.81 -22.942 1001.73
+0453: set_object 213@ XY_rotation 0.0 0.0 angle 0.0
+029B: 214@ = init_object #imy_bbox at 1278.81 -22.942 1002.93
+0453: set_object 214@ XY_rotation 0.0 0.0 angle 354.0
+029B: 215@ = init_object #imy_bbox at 1278.81 -22.942 1004.13
+0453: set_object 215@ XY_rotation 0.0 0.0 angle 0.0
+029B: 216@ = init_object #imy_bbox at 1260.51 -22.942 1000.53
+0453: set_object 216@ XY_rotation 0.0 0.0 angle 0.0
+029B: 217@ = init_object #imy_bbox at 1260.51 -22.942 1001.73
+0453: set_object 217@ XY_rotation 0.0 0.0 angle 356.0
+029B: 218@ = init_object #imy_bbox at 1260.61 -22.842 1002.93
+0453: set_object 218@ XY_rotation 0.0 0.0 angle 356.0
+029B: 219@ = init_object #imy_bbox at 1297.51 -4.442 1000.53
+0453: set_object 219@ XY_rotation 0.0 0.0 angle 356.0
+029B: 220@ = init_object #imy_bbox at 1297.51 -4.442 1001.73
+0453: set_object 220@ XY_rotation 0.0 0.0 angle 0.0
+029B: 221@ = init_object #imy_bbox at 1297.51 -4.442 1002.93
+0453: set_object 221@ XY_rotation 0.0 0.0 angle 0.0
+029B: 222@ = init_object #imy_bbox at 1278.91 -4.442 1000.53
+0453: set_object 222@ XY_rotation 0.0 0.0 angle 358.0
+029B: 223@ = init_object #imy_bbox at 1278.91 -4.442 1001.73
+0453: set_object 223@ XY_rotation 0.0 0.0 angle 4.0
+029B: 224@ = init_object #imy_bbox at 1278.91 -4.442 1002.93
+0453: set_object 224@ XY_rotation 0.0 0.0 angle 0.0
+029B: 225@ = init_object #imy_bbox at 1260.51 -4.442 1000.53
+0453: set_object 225@ XY_rotation 0.0 0.0 angle 356.0
+029B: 226@ = init_object #imy_bbox at 1260.51 -4.442 1001.73
+0453: set_object 226@ XY_rotation 0.0 0.0 angle 3.0
+029B: 227@ = init_object #imy_bbox at 1260.71 -4.442 1002.93
+0453: set_object 227@ XY_rotation 0.0 0.0 angle 0.0
+{029B: 228@ = init_object #gate_autoR at 1266.71 -32.223 1009.03
+0453: set_object 228@ XY_rotation 0.0 0.0 angle 0.0
+029B: 229@ = init_object #gate_autoL at 1258.81 -32.223 1009.03
+0453: set_object 229@ XY_rotation 0.0 0.0 angle 0.0}
+if 0039: 100@ == 1 // Box exploded
+then
+    029B: 230@ = init_object #a51_ventsouth at 1263.2 -2.6124 1013.83 1008.33//108@ //1013.83 // 1008.33
+    0453: set_object 230@ XY_rotation 0.0 0.0 angle 270.0
+    029B: 231@ = init_object #a51_ventsouth at 1263.2 -18.3124 1013.83 1008.33//108@ //1013.83 // 1008.33
+    0453: set_object 231@ XY_rotation 0.0 0.0 angle 270.0
+    029B: 232@ = init_object #a51_ventsouth at 1263.2 -23.2124 1013.83 1008.33//108@ //1013.83 // 1008.33
+    0453: set_object 232@ XY_rotation 0.0 0.0 angle 270.0
+    029B: 233@ = init_object #a51_plat at 1264.69 -1.287 1000.65 1009.15//109@ //1000.65 // 1009.15
+    0453: set_object 233@ XY_rotation 0.0 0.0 angle 270.0
+    029B: 234@ = init_object #OTB_machine at 1249.97 7.02211 1007.96
+    0453: set_object 234@ XY_rotation 0.0 0.0 angle 90.0
+end
+029B: 235@ = init_object #Dr_GsNEW02 at 1281.89 6.47886 999.859
+0453: set_object 235@ XY_rotation 0.0 0.0 angle 0.0
+029B: 236@ = init_object #k_smashboxes at 1307.61 -22.6424 999.897
+0453: set_object 236@ XY_rotation 0.0 0.0 angle 0.0
+029B: 237@ = init_object #k_smashboxes at 1297.67 4.4901 999.897
+0453: set_object 237@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+
+:RESCUE_SPAWN_OBJECTS_FACILITY
+029B: 238@ = init_object #a51_labdoor at 226.704 1872.05 12.7315
+0453: set_object 238@ XY_rotation 0.0 0.0 angle 270.0
+029B: 239@ = init_object #a51_labdoor at 256.204 1835.65 3.6315
+0453: set_object 239@ XY_rotation 0.0 0.0 angle 270.0
+029B: 240@ = init_object #a51_labdoor at 238.004 1872.15 10.4315
+0453: set_object 240@ XY_rotation 0.0 0.0 angle 270.0
+029B: 241@ = init_object #a51_labdoor at 256.404 1845.95 7.7315
+0453: set_object 241@ XY_rotation 0.0 0.0 angle 270.0
+{029B: 242@ = init_object #a51_labdoor at 239.404 1862.55 13.0315
+0453: set_object 242@ XY_rotation 0.0 0.0 angle 0.0
+029B: 245@ = init_object #a51_srack1_ at 248.712 1858.18 12.6974
+0453: set_object 245@ XY_rotation 0.0 0.0 angle 0.0
+029B: 246@ = init_object #a51_srack3_ at 248.712 1859.78 12.6974
+0453: set_object 246@ XY_rotation 0.0 0.0 angle 0.0
+029B: 247@ = init_object #a51_srack4_ at 242.87 1863.96 10.3609
+0453: set_object 247@ XY_rotation 0.0 0.0 angle 270.0}
+if 0038: $OBJ1_STATUS == 8 // Destroy computer records
+then
+    029B: 247@ = init_object #a51_srack4_ at 242.87 1863.96 10.3609
+    0453: set_object 247@ XY_rotation 0.0 0.0 angle 270.0
+end
+029B: 243@ = init_object #a51_spotbulb at 263.701 1825.06 2.2351
+0453: set_object 243@ XY_rotation 90.0 0.0 angle 0.0
+029B: 244@ = init_object #a51_spotbulb at 299.465 1819.36 2.2351
+0453: set_object 244@ XY_rotation 90.0 0.0 angle 0.0
+if 0028:   $OBJ4_STATUS >= 5 // Gain access to autopsy lab
+then
+else
+    029B: 248@ = init_object #a51_labdoor at 283.052 1869.42 13.4578
+    0453: set_object 248@ XY_rotation 0.0 180.0 angle 90.0
+    029B: 249@ = init_object #a51_labdoor at 283.052 1869.42 5.4578
+    0453: set_object 249@ XY_rotation 0.0 0.0 angle 270.0
+end
+029B: 270@ = init_object #a51_labdoor at 268.652 1864.72 7.4578
+0453: set_object 270@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+
+:RESCUE_SPAWN_OBJECTS_SHOWERS
+029B: 250@ = init_object #a51_labdoor at 1302.03 -783.556 1083.01
+0453: set_object 250@ XY_rotation 0.0 0.0 angle 0.0
+029B: 251@ = init_object #a51_labdoor at 1249.49 -773.681 1083.01
+0453: set_object 251@ XY_rotation 0.0 0.0 angle 0.0
+029B: 252@ = init_object #a51_spothousing at 1248.15 -770.167 1085.92
+0453: set_object 252@ XY_rotation 0.0 0.0 angle 90.0
+029B: 253@ = init_object #des_a51warheads at 1257.63 -781.277 1083.81
+0453: set_object 253@ XY_rotation 0.0 0.0 angle 270.0
+029B: 254@ = init_object #a51_srack4_ at 1252.78 -773.477 1083.01
+0453: set_object 254@ XY_rotation 0.0 0.0 angle 270.0
+029B: 255@ = init_object #a51_sdsk_ncol1_ at 1252.93 -766.778 1083.01
+0453: set_object 255@ XY_rotation 0.0 0.0 angle 90.0
+029B: 256@ = init_object #a51_srack4_ at 1255.98 -773.777 1083.81
+0453: set_object 256@ XY_rotation 0.0 0.0 angle 270.0
+029B: 257@ = init_object #a51_srack3_ at 1257.08 -773.777 1083.81
+0453: set_object 257@ XY_rotation 0.0 0.0 angle 270.0
+029B: 258@ = init_object #a51_srack1_ at 1254.88 -773.777 1083.81
+0453: set_object 258@ XY_rotation 0.0 0.0 angle 270.0
+029B: 259@ = init_object #a51_srack2_ at 1253.78 -773.777 1083.81
+0453: set_object 259@ XY_rotation 0.0 0.0 angle 270.0
+029B: 260@ = init_object #a51_srack2_ at 1258.18 -773.477 1083.01
+0453: set_object 260@ XY_rotation 0.0 0.0 angle 270.0
+029B: 261@ = init_object #imy_bbox at 1256.67 -766.636 1083.6
+0453: set_object 261@ XY_rotation 0.0 0.0 angle 0.0
+029B: 262@ = init_object #kmilitary_crate at 1256.57 -766.836 1084.04
+0453: set_object 262@ XY_rotation 0.0 0.0 angle 0.0
+029B: 263@ = init_object #cr_ammobox_nonbrk at 1255.47 -766.736 1084.4
+0453: set_object 263@ XY_rotation 0.0 0.0 angle 34.0
+029B: 264@ = init_object #sec_keypad at 1267.94 -771.75 1084.31
+0453: set_object 264@ XY_rotation 0.0 0.0 angle 270.0
+029B: 265@ = init_object #sec_keypad at 1267.94 -767.766 1084.31
+0453: set_object 265@ XY_rotation 0.0 0.0 angle 270.0
+029B: 266@ = init_object #sec_keypad at 1259.64 -767.766 1084.31
+0453: set_object 266@ XY_rotation 0.0 0.0 angle 270.0
+029B: 267@ = init_object #sec_keypad at 1259.64 -771.75 1084.31
+0453: set_object 267@ XY_rotation 0.0 0.0 angle 270.0
+029B: 268@ = init_object #CJ_CHIP_MAKER_BITS at 1297.81 -782.55 1083.81
+0453: set_object 268@ XY_rotation 0.0 0.0 angle 0.0
+029B: 269@ = init_object #CJ_CHIP_MAKER at 1297.81 -782.55 1083.81
+0453: set_object 269@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+{=================================================================
+OTHER TASKS
+==================================================================}
+:M4_2_OTHER_TASKS
+if and
+0038: $OTHER_TASKS_STATUS == 0
+0038: $AREA_STATUS == 0 // Hangar
+then
+    0247: load_model #forklift
+    038B: load_requested_models
+    repeat
+    wait 0 ms
+    until 0248: model #forklift available
+        
+    00A5: 0@ = create_car #forklift at 104@ 105@ 106@
+    0175: set_car 0@ Z_angle_to 107@
+    0840: link_car 0@ to_interior 18
+    0249: release_model #forklift
+    
+    if 0039: 100@ == 0 // Box not exploded
+    then
+        029B: ExplosiveBox = init_object #CJ_CARDBRD_PICKUP at 1295.6 -55.5475 1002.0
+        0453: set_object ExplosiveBox XY_rotation 0.0 0.0 angle 0.0
+        071F: set_object ExplosiveBox health_to 1
+        029B: 228@ = init_object #gate_autoR at 1266.71 -32.223 1009.03
+        0453: set_object 228@ XY_rotation 0.0 0.0 angle 0.0
+        029B: 229@ = init_object #gate_autoL at 1258.81 -32.223 1009.03
+        0453: set_object 229@ XY_rotation 0.0 0.0 angle 0.0 
+        {071F: set_object 228@ health_to 1
+        071F: set_object 229@ health_to 1}
+        029B: 234@ = init_object #OTB_machine at 1249.97 7.02211 1007.96
+        0453: set_object 234@ XY_rotation 0.0 0.0 angle 90.0
+        0188: 306@ = create_marker_above_object 234@
+        0165: set_marker 306@ color_to 0 // Red
+        0188: 304@ = create_marker_above_object ExplosiveBox
+        0165: set_marker 304@ color_to 1 // Green
+        0161: 305@ = create_marker_above_car 0@ unknown 0 radar_mode 1 
+        0165: set_marker 305@ color_to 0 // Red
+
+        029B: 230@ = init_object #a51_ventsouth at 1263.2 -2.6124 1013.83
+        0453: set_object 230@ XY_rotation 0.0 0.0 angle 270.0
+        029B: 231@ = init_object #a51_ventsouth at 1263.2 -18.3124 1013.83
+        0453: set_object 231@ XY_rotation 0.0 0.0 angle 270.0
+        029B: 232@ = init_object #a51_ventsouth at 1263.2 -23.2124 1013.83
+        0453: set_object 232@ XY_rotation 0.0 0.0 angle 270.0
+        029B: 233@ = init_object #a51_plat at 1264.69 -1.287 1000.65
+        0453: set_object 233@ XY_rotation 0.0 0.0 angle 270.0
+        $OTHER_TASKS_STATUS=1
+    else $OTHER_TASKS_STATUS=5
+    end
+end
+
+if and
+8038: not $OTHER_TASKS_STATUS == 0
+8038: not $OTHER_TASKS_STATUS == 99
+8038: not $AREA_STATUS == 0 // Not in Hangar
+then
+    //00AA: store_car 0@ position_to 104@ 105@ 106@
+    //0174: 107@ = car 0@ Z_angle 
+    0108: destroy_object ExplosiveBox
+    00A6: destroy_car 0@
+    03BD: destroy_sphere 300@
+    0164: disable_marker 301@ 
+    03BD: destroy_sphere 302@
+    0164: disable_marker 303@ 
+    0164: disable_marker 304@
+    0164: disable_marker 305@
+    $OTHER_TASKS_STATUS=0    
+end
+
+if and
+0038: $OTHER_TASKS_STATUS == 1
+00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1249.9547 6.2216 1008.2578 radius 1.0 1.0 1.0 
+then
+    if 00E1:   player 0 pressed_key 15 // ENTER
+    then
+        03E6: remove_text_box
+        0687: clear_actor $PLAYER_ACTOR task
+        
+        04ED: load_animation "bd_fire" 
+        repeat
+        wait 0 ms
+        until 04EE: animation "bd_fire" loaded
+        0605: actor $PLAYER_ACTOR perform_animation_sequence "wash_up" IFP_file "bd_fire" 10.0 loop 0 0 0 0 time 1500
+        0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+        wait 1000 ms
+        04EF: release_animation "bd_fire"
+              
+        0164: disable_marker 306@
+        if 0039: 100@ == 0 // Box not exploded
+        then
+            03BC: 300@ = create_sphere_at 1262.8287 -31.3385 1009.3535 radius 1.0 
+            018A: 301@ = create_checkpoint_at 1262.8287 -31.3385 1009.3535
+            0165: set_marker 301@ color_to 0 // Red
+        end
+        108@=1013.83
+        00BC: show_text_highpriority GXT 'M42_044' time 4000 flag 1  // The bridge has been lowered.
+        $OTHER_TASKS_STATUS = 2
+    else
+        if and
+        0029:   33@ >= 10000
+        88FE: not text_box_displayed
+        then
+        03E5: show_text_box 'M42_043' // Press ~s~ENTER~w~ to activate ~r~Bridge~w~.
+        33@=0
+        end
+    end
+end
+
+if 0038: $OTHER_TASKS_STATUS == 2
+then if 8038: not 108@ == 1008.33
+    then
+        034E: move_object 230@ to 1263.2 -2.6124 1008.33 speed 0.0 0.0 0.2 flag 0
+        034E: move_object 231@ to 1263.2 -18.3124 1008.33 speed 0.0 0.0 0.2 flag 0
+        034E: move_object 232@ to 1263.2 -23.2124 1008.33 speed 0.0 0.0 0.2 flag 0
+        01BB: store_object 232@ position_to 199@ 198@ 108@
+    else
+        $OTHER_TASKS_STATUS=3
+        if 0039: 100@ == 0 // Box not exploded
+        then
+            03BC: 302@ = create_sphere_at 1264.3584 -1.2865 1001.0234 radius 1.0 
+            018A: 303@ = create_checkpoint_at 1264.3584 -1.2865 1001.0234
+            0165: set_marker 303@ color_to 0 // Red
+        end
+    end
+end
+
+if or
+0038: $OTHER_TASKS_STATUS == 2
+0038: $OTHER_TASKS_STATUS == 3
+then
+    if 00ED:   actor $PLAYER_ACTOR 0 near_point 1264.5973 2.2096 radius 1.0 1.0 on_foot
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            03E6: remove_text_box
+            0687: clear_actor $PLAYER_ACTOR task
+            04ED: load_animation "crib" 
+            repeat
+            wait 0 ms
+            until 04EE: animation "crib" loaded
+            0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+            04EF: release_animation "crib"
+            0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+            03BD: destroy_sphere 302@ 
+            0164: disable_marker 303@
+            if 01AF:   car 0@ sphere 0 in_sphere 1264.3584 -1.2865 1001.0234 radius 1.0 1.0 1.0
+            then 0939: attach_car 0@ to_object 233@ with_offset 0.0 -1.2 0.0 rotation 0.0 0.0 315.0
+            end
+            109@=1000.65
+            $OTHER_TASKS_STATUS=4
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_042' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to activate ~r~Lift~w~.
+            33@=0
+            end
+        end          
+    end
+end
+
+if 0038: $OTHER_TASKS_STATUS == 4
+then
+    if 8038: not 109@ == 1009.15
+    then
+        034E: move_object 233@ to 1264.69 -1.287 1009.15 speed 0.0 0.0 0.2 flag 0
+        01BB: store_object 233@ position_to 199@ 198@ 109@
+    else $OTHER_TASKS_STATUS=5
+        0684: detach_car 0@ 0.0 0.0 0.0 collision_detection 1
+    end
+end
+
+if
+0038: $OTHER_TASKS_STATUS == 5
+then
+    if 00ED:   actor $PLAYER_ACTOR 0 near_point 1264.5973 2.2096 radius 1.0 1.0 on_foot
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            03E6: remove_text_box
+            0687: clear_actor $PLAYER_ACTOR task
+            04ED: load_animation "crib" 
+            repeat
+            wait 0 ms
+            until 04EE: animation "crib" loaded
+            0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+            04EF: release_animation "crib"
+            0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+            03BD: destroy_sphere 302@ 
+            0164: disable_marker 303@
+            if 01AF:   car 0@ sphere 0 in_sphere 1264.3584 -1.2865 1009.3613 radius 1.0 1.0 1.0
+            then 
+                0174: 110@ = car 0@ Z_angle 
+                0939: attach_car 0@ to_object 233@ with_offset 0.0 0.0 0.0 rotation 0.0 0.0 110@
+            end
+            109@=1009.15
+            $OTHER_TASKS_STATUS=6
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_042' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to activate ~r~Lift~w~.
+            33@=0
+            end
+        end          
+    end
+end
+
+if 0038: $OTHER_TASKS_STATUS == 6
+then
+    if 8038: not 109@ == 1000.65
+    then
+        034E: move_object 233@ to 1264.69 -1.287 1000.65 speed 0.0 0.0 0.2 flag 0
+        01BB: store_object 233@ position_to 199@ 198@ 109@
+    else $OTHER_TASKS_STATUS=3
+        0684: detach_car 0@ 0.0 0.0 0.0 collision_detection 0
+    end
+end
+
+if and
+0038: $AREA_STATUS == 0 // Hangar
+0039: 100@ == 0 // Box not exploded
+then
+    if 0366:   object ExplosiveBox damaged 
+    then 01BB: store_object ExplosiveBox position_to 101@ 102@ 103@
+        0948: create_explosion_at 101@ 102@ 103@ type 10 camera_shake 2.0
+        100@=1
+        if 84E6:   not object ExplosiveBox near_point 1262.8287 -31.3385 1009.3535 radius 1.0 1.0 1.0 flag 0
+        then $OTHER_TASKS_STATUS=99 // Mission Failed
+            00BC: show_text_highpriority GXT 'M42_041' time 4000 flag 1  // Mission critical equipment destroyed.
+        else
+            0108: destroy_object 228@
+            0108: destroy_object 229@
+            03BD: destroy_sphere 300@
+            0164: disable_marker 301@ 
+            0164: disable_marker 304@
+            0164: disable_marker 305@
+        end
+    end
+    if 00DB:   actor $PLAYER_ACTOR in_car 0@
+    then
+        if 0039: 111@ == 0
+        then
+            0164: disable_marker 305@
+            111@=1
+        end
+    else // Actor not in car
+        if 0039: 111@ == 1
+        then
+            0161: 305@ = create_marker_above_car 0@ unknown 0 radar_mode 1 
+            0165: set_marker 305@ color_to 0 // Red
+            111@=0
+        end
+    end
+    if 0119:   car 0@ wrecked 
+    then $OTHER_TASKS_STATUS=99 // Mission Failed
+        00BC: show_text_highpriority GXT 'M42_041' time 4000 flag 1  // Mission critical equipment destroyed.
+    end
+end
+0051: return    
+
+{=================================================================
+OBJECTIVE 1 - Destroy computer records
+==================================================================}
+:M4_2_OBJECTIVE1
+if and
+0038: $OBJ1_STATUS == 0
+0038: $AREA_STATUS == 1 // Facility
+then
+    029B: 242@ = init_object #a51_labdoor at 239.404 1862.55 13.0315
+    0453: set_object 242@ XY_rotation 0.0 0.0 angle 0.0
+    029B: 245@ = init_object #a51_srack1_ at 248.712 1858.18 12.6974
+    0453: set_object 245@ XY_rotation 0.0 0.0 angle 0.0
+    029B: 246@ = init_object #a51_srack3_ at 248.712 1859.78 12.6974
+    0453: set_object 246@ XY_rotation 0.0 0.0 angle 0.0
+    029B: 247@ = init_object #a51_srack4_ at 242.87 1863.96 10.3609
+    0453: set_object 247@ XY_rotation 0.0 0.0 angle 270.0
+    {0188: 310@ = create_marker_above_object 245@
+    0188: 311@ = create_marker_above_object 246@}
+    0188: 312@ = create_marker_above_object 247@
+    {0165: set_marker 310@ color_to 0 // Red
+    0165: set_marker 311@ color_to 0} // Red
+    0165: set_marker 312@ color_to 0 // Red
+    071F: set_object 245@ health_to 200
+    071F: set_object 246@ health_to 200
+    $OBJ1_STATUS=1
+end
+
+if and
+8038: not $OBJ1_STATUS == 0
+8038: not $AREA_STATUS == 1 // Not in Facility
+then
+    0164: disable_marker 310@ 
+    0164: disable_marker 311@ 
+    0164: disable_marker 312@ 
+    0108: destroy_object 242@ 
+    0108: destroy_object 245@ 
+    0108: destroy_object 246@ 
+    0108: destroy_object 247@ 
+    $OBJ1_STATUS=0 
+end
+
+if 0038: $OBJ1_STATUS == 1
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 1 in_sphere 212.963 1819.8612 6.4216 radius 1.0 1.0 1.0 
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            00BC: show_text_highpriority GXT 'M42_034' time 4000 flag 1  // Data Uplink connected.
+            32@=0
+            $OBJ1_STATUS=2
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_038' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Control Panel~w~.
+            33@=0
+            end
+        end          
+    end
+end
+
+if and
+0038: $OBJ1_STATUS == 2
+0029:   32@ >= 4000
+then
+    00BC: show_text_highpriority GXT 'M42_036' time 4000 flag 1  // Initiating virus download.
+    32@=0
+    $OBJ1_STATUS=3
+end 
+
+if and
+0038: $OBJ1_STATUS == 3
+0029:   32@ >= 10000
+then
+    00BC: show_text_highpriority GXT 'M42_037' time 4000 flag 1  // Virus downloaded to the console.
+    $OBJ1_STATUS=4
+end
+
+if or
+0038: $OBJ1_STATUS == 2
+0038: $OBJ1_STATUS == 3
+then
+    if 80FE:   not actor $PLAYER_ACTOR sphere 0 in_sphere 212.963 1819.8612 6.4216 radius 1.0 1.0 1.0 
+    then
+        00BC: show_text_highpriority GXT 'M12_040' time 4000 flag 1  // Contact broken - reestablish link.
+        $OBJ1_STATUS=1
+    end
+end
+
+if or
+0038: $OBJ1_STATUS == 1
+0038: $OBJ1_STATUS == 4
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 242.8385 1864.8064 11.4609 radius 1.0 1.0 1.0 
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            if 0038: $OBJ1_STATUS == 1
+            then 00BC: show_text_highpriority GXT 'M42_035' time 4000 flag 1  // Security system is on-line. Access denied.
+            end
+            if 0038: $OBJ1_STATUS == 4
+            then
+                00BC: show_text_highpriority GXT 'M42_034' time 4000 flag 1  // Data Uplink connected.
+                32@=0
+                $OBJ1_STATUS=5
+            end
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_039' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to access ~r~Electronic Locks~w~.
+            33@=0
+            end
+        end          
+    end
+end
+
+if and
+0038: $OBJ1_STATUS == 5
+0029:   32@ >= 4000
+then
+    00BC: show_text_highpriority GXT 'M42_036' time 4000 flag 1  // Initiating virus download.
+    32@=0
+    $OBJ1_STATUS=6
+end 
+
+if and
+0038: $OBJ1_STATUS == 6
+0029:   32@ >= 10000
+then
+    00BC: show_text_highpriority GXT 'M42_037' time 4000 flag 1  // Virus downloaded to the console.
+    0164: disable_marker 312@
+    018A: 312@ = create_checkpoint_at 247.8315 1859.0961 14.084
+    108@=13.0315
+    $OBJ1_STATUS=7
+end
+
+if or
+0038: $OBJ1_STATUS == 5
+0038: $OBJ1_STATUS == 6
+then
+    if 80FE:   not actor $PLAYER_ACTOR sphere 0 in_sphere 242.8385 1864.8064 11.4609 radius 1.0 1.0 1.0 
+    then
+        00BC: show_text_highpriority GXT 'M12_040' time 4000 flag 1  // Contact broken - reestablish link.
+        $OBJ1_STATUS=4
+    end
+end
+
+if
+0038: $OBJ1_STATUS == 7
+then
+    if 8038: not 108@ == 15.6315
+    then
+        034E: move_object 242@ to 239.404 1862.55 15.6315 speed 0.0 0.0 0.02 flag 0
+        01BB: store_object 242@ position_to 199@ 198@ 108@
+    else
+        $OBJ1_STATUS=8
+        0108: destroy_object 242@ 
+    end
+end
+
+if and
+8038: not $OBJ1_STATUS == 0
+0038: $AREA_STATUS == 1 // Facility
+then
+    if 0039: 114@ == 0
+    then 071E: get_object 245@ health_to 112@
+        if 0039: 112@ == 0
+        then 0108: destroy_object 245@
+            0948: create_explosion_at 248.712 1858.18 12.6974 type 0 camera_shake 0.0
+            114@=1
+        end
+    end 
+    if 0039: 115@ == 0
+    then 071E: get_object 246@ health_to 113@
+        if 0039: 113@ == 0
+        then 0108: destroy_object 246@
+            0948: create_explosion_at 248.712 1859.78 12.6974 type 0 camera_shake 0.0
+            115@=1
+        end
+    end
+    if and
+    0039: 114@ == 1
+    0039: 115@ == 1
+    then
+        00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2         //Objective 1: Completed
+        00BC: show_text_highpriority GXT 'M42_040' time 4000 flag 1  // Research records destroyed.
+        0164: disable_marker 312@
+        $MOBJ1=1
+        $OBJ1_STATUS=8
+    end 
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 2 - Locate conspiracy evidence
+==================================================================}
+:M4_2_OBJECTIVE2
+if 0039: 120@ == 0
+then
+    0209: 121@ = random_int_in_ranges 0 3
+    if 0039: 121@ == 0
+    then
+        // Position of Maian
+        122@=290.6131
+        123@=1830.7402
+        124@=9.0946
+        // Angle of Maian
+        125@=130.0
+        // Position of Player
+        126@=296.1641
+        127@=1831.4171
+        128@=7.7266
+    end
+    if 0039: 121@ == 1
+    then
+        // Position of Maian
+        122@=306.0312
+        123@=1832.0753
+        124@=6.8914
+        // Angle of Maian
+        125@=0.0
+        // Position of Player
+        126@=306.1729
+        127@=1837.8372
+        128@=7.7266
+    end
+    if 0039: 121@ == 2
+    then
+        // Position of Maian
+        122@=321.0404
+        123@=1832.5013
+        124@=6.8914
+        // Angle of Maian
+        125@=282.0
+        // Position of Player
+        126@=321.8541
+        127@=1838.2268
+        128@=7.734
+    end
+    if 0039: 121@ == 3
+    then
+        // Position of Maian
+        122@=320.091
+        123@=1847.65
+        124@=6.80051
+        // Angle of Maian
+        125@=270.0
+        // Position of Player
+        126@=314.6777
+        127@=1847.6273
+        128@=7.7266
+    end
+    120@=1
+end
+
+if and
+0038: $OBJ2_STATUS == 0
+0038: $AREA_STATUS == 1 // Facility
+then
+    if 0039: 121@ == 3
+    then
+        029B: 271@ = init_object #a51_labtable1_ at 320.005 1847.26 4.83594
+        0453: set_object 271@ XY_rotation 0.0 0.0 angle 0.0
+    end
+    023C: load_special_actor 'maian1' as 1
+    038B: load_requested_models
+    repeat
+    wait 0
+    until 023D:   special_actor 1 loaded
+    009A: 20@ = create_actor_pedtype 4 model #special01 at 122@ 123@ 124@
+    0296: unload_special_actor 1
+    0173: set_actor $PLAYER_ACTOR Z_angle_to 125@
+    $OBJ2_STATUS=1
+end
+
+if and
+8038: not $OBJ2_STATUS == 0
+8038: not $AREA_STATUS == 1 // Not in Facility
+then
+    009B: destroy_actor 20@ 
+    0164: disable_marker 320@
+    $OBJ2_STATUS=0 
+end
+
+if 0038: $OBJ2_STATUS == 1
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 287.2618 1818.1222 4.7104 radius 2.0 2.0 2.0
+    then
+        0187: 320@ = create_marker_above_actor 20@
+        0165: set_marker 320@ color_to 0 // Red
+        00BC: show_text_highpriority GXT 'M42_014' time 4000 flag 1  // (Carrington) The temperature is dropping... you must be close to the cryo room.
+        $OBJ2_STATUS=2
+    end
+end
+
+if and
+0038: $OBJ2_STATUS == 2
+00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 126@ 127@ 128@ radius 2.0 2.0 2.0
+then
+    32@=0
+    $OBJ2_STATUS=3
+end
+
+if and
+0038: $OBJ2_STATUS == 3
+0029:   32@ >= 3000 
+then
+    00BC: show_text_highpriority GXT 'M42_015' time 4000 flag 1  // Scanner target aqcuired.
+    32@=0
+    $OBJ2_STATUS=4
+end
+
+if and
+0038: $OBJ2_STATUS == 4
+002B:   8000 >= 32@ 
+80FE:   not actor $PLAYER_ACTOR sphere 0 in_sphere 126@ 127@ 128@ radius 2.0 2.0 2.0
+then
+    00BC: show_text_highpriority GXT 'M42_016' time 4000 flag 1  // Scanner lock lost.
+    $OBJ2_STATUS=2
+end
+
+if and
+0038: $OBJ2_STATUS == 4
+0029:   32@ >= 8000 
+then
+    if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+    then 
+        00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2         //Objective 1: Completed
+        $MOBJ1=1
+    else                              // Perfect Agent
+        00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2         //Objective 2: Completed
+        $MOBJ2=1
+    end
+    0164: disable_marker 320@
+    00BC: show_text_highpriority GXT 'M42_017' time 4000 flag 1  // Target ID confirmed - XT origin.
+    $OBJ2_STATUS=5
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 3 - Obtain and use lab technician Disguise
+==================================================================}
+:M4_2_OBJECTIVE3
+if 0038:   $OBJ3_STATUS == 0
+then
+    if and
+    0038: $MISSION_DIFFICULTY == 1 // Agent
+    0038: $AREA_STATUS == 1 // Facility
+    0029:   133@ >= 0
+    002B:   2 >= 133@ // 133@ is 0, 1, or 2
+    then
+        0247: load_model #wmysgrd
+        038B: load_requested_models 
+        repeat
+        wait 0
+        until 0248:   model #wmysgrd available
+        009A: 30@ = create_actor_pedtype 4 model #wmysgrd at 299.012 1816.1497 4.7109
+        0249: release_model #wmysgrd
+        0173: set_actor 30@ Z_angle_to 90.0
+        05D6: clear_scmpath
+        05D7: add_point_to_scmpath 273.7666 1816.4585 4.7031
+        05D7: add_point_to_scmpath 299.012 1816.1497 4.7109
+        05D8: AS_assign_scmpath to_actor 30@ flags 4 2  
+        0187: 330@ = create_marker_above_actor 30@
+        0165: set_marker 330@ color_to 0 // Red
+        $OBJ3_STATUS=1
+    end
+    if and
+    8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+    0038: $AREA_STATUS == 2 // Showers
+    0029:   133@ >= 0
+    002B:   2 >= 133@ // 133@ is 0, 1, or 2
+    then
+        0247: load_model #wmysgrd
+        038B: load_requested_models 
+        repeat
+        wait 0
+        until 0248:   model #wmysgrd available
+        009A: 30@ = create_actor_pedtype 4 model #wmysgrd at 1270.0967 -781.8113 1084.0149
+        0249: release_model #wmysgrd
+        0173: set_actor 30@ Z_angle_to 270.0
+        05D6: clear_scmpath
+        05D7: add_point_to_scmpath 1290.2083 -782.6265 1084.0078
+        05D7: add_point_to_scmpath 1290.2334 -767.1279 1084.0078
+        05D7: add_point_to_scmpath 1270.5648 -767.0318 1084.0078
+        05D7: add_point_to_scmpath 1269.9331 -781.8367 1084.0149
+        05D8: AS_assign_scmpath to_actor 30@ flags 4 2  
+        0187: 330@ = create_marker_above_actor 30@
+        0165: set_marker 330@ color_to 0 // Red
+        $OBJ3_STATUS=1
+    end
+end
+
+if 0038:   $OBJ3_STATUS == 1
+then
+    if and
+    0038: $MISSION_DIFFICULTY == 1 // Agent
+    8038: not $AREA_STATUS == 1 // Not in Facility
+    then
+        0164: disable_marker 330@
+        0164: disable_marker 331@
+        009B: destroy_actor 30@
+        $OBJ3_STATUS=0 
+    end
+    if and
+    8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+    8038: not $AREA_STATUS == 2 // Not in Showers
+    then
+        0164: disable_marker 330@
+        0164: disable_marker 331@
+        009B: destroy_actor 30@
+        $OBJ3_STATUS=0 
+    end
+end
+
+if 0038:   $OBJ3_STATUS == 1
+then
+    if 0039: 133@ == 0
+    then
+        133@=1
+        if 8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+        then 00BC: show_text_highpriority GXT 'M42_018' time 4000 flag 1  // The showers... Now, if I can convince someone to part with their uniform...
+        end
+    end
+    if and
+    0039: 133@ == 1
+    09ED:   actor $PLAYER_ACTOR is_within_field_of_view_actor 30@
+    0104:   actor $PLAYER_ACTOR near_actor 30@ radius 10.0 10.0 10.0 sphere 0 
+    then
+        133@=2
+        074D: AS_actor 30@ turns_to_and_look_at_actor $PLAYER_ACTOR timelimit -1 
+        05C3: AS_actor 30@ hands_cower
+        00BC: show_text_highpriority GXT 'M42_019' time 4000 flag 1  // (Lab Technician) Who are you?
+    end
+    if 0039: 133@ == 2
+    then
+        if 0118:   actor 30@ dead
+        then
+            133@=3
+            0164: disable_marker 330@
+            04A5: store_dead_actor 30@ position_to 130@ 131@ 132@
+            0213: 280@ = create_pickup #clothesp type 3 at 130@ 131@ 132@
+            03DC: 331@ = create_marker_above_pickup 280@
+            0165: set_marker 331@ color_to 0 // Red
+        end
+    end
+    if 0039: 133@ == 3
+    then
+        if 0214:   pickup 280@ picked_up
+        then
+            0164: disable_marker 331@
+            0050: gosub @SUB_FADE_500MS
+            023C: load_special_actor 'mdisg2' as 1
+            038B: load_requested_models
+            repeat
+            wait 0
+            until 023D:   special_actor 1 loaded
+            09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+            0296: unload_special_actor 1
+            0050: gosub @FADEOUT
+            if 0038: $MISSION_DIFFICULTY == 1 // Special Agent
+            then 
+                00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2         //Objective 1: Completed
+                $MOBJ1=1
+            end
+            if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+            then 
+                00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2         //Objective 2: Completed
+                $MOBJ2=1
+            end
+            if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+            then 
+                00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2         //Objective 3: Completed
+                $MOBJ3=1
+            end
+            00BC: show_text_highpriority GXT 'M42_023' time 4000 flag 1  // Picked up lab clothes.
+            $OBJ3_STATUS=2
+            32@=0
+        end
+    end
+end
+
+0051: return
+
+{=================================================================
+OBJECTIVE 4 - Gain access to autopsy lab
+==================================================================}
+:M4_2_OBJECTIVE4    
+if and
+0039: 142@ == 0
+0038: $AREA_STATUS == 1 // Facility
+then
+    if 0028:   $OBJ4_STATUS >= 6 
+    then
+    else
+        0247: load_model #wmosci
+        0247: load_model #army
+        0247: load_model #ak47
+        038B: load_requested_models 
+        repeat
+        wait 0
+        until 0248: model #wmosci available and 0248: model #army available and 0248: model #ak47 available
+        009A: 40@ = create_actor_pedtype 4 model #army at 281.2054 1871.1344 8.7578
+        009A: 41@ = create_actor_pedtype 4 model #wmosci at 272.3776 1865.9941 8.7578
+        01B2: give_actor 40@ weapon 30 ammo 60
+        01B9: set_actor 40@ armed_weapon_to 30 
+        0173: set_actor 40@ Z_angle_to 215.0 
+        0173: set_actor 41@ Z_angle_to 270.0 
+        0249: release_model #army
+        0249: release_model #wmosci
+        0249: release_model #ak47
+    end
+    if 0038: $OBJ4_STATUS == 5
+    then
+        0187: 340@ = create_marker_above_actor 41@
+        0165: set_marker 340@ color_to 0 // Red
+    end
+    if 0038: $OBJ4_STATUS == 6
+    then
+        03DC: 341@ = create_marker_above_pickup 281@
+        0165: set_marker 341@ color_to 0 // Red
+    end
+    142@=1
+end
+
+if and
+0039: 142@ == 1
+8038: not $AREA_STATUS == 1 // Not in Facility
+then
+    0164: disable_marker 340@ 
+    0164: disable_marker 341@
+    009B: destroy_actor 40@ 
+    009B: destroy_actor 41@ 
+    0108: destroy_object 248@ 
+    0108: destroy_object 249@ 
+    142@=0
+end
+
+if and
+0038: $OBJ4_STATUS == 0
+0038: $OBJ3_STATUS == 2 // Obtain and use lab technician Disguise
+0029:   32@ >= 4000 
+then
+    00BC: show_text_highpriority GXT 'M42_024' time 4000 flag 1  // (Johanna) I don't have much time!!!
+    if 8038: not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    then $globaltimer=90000 // 1:30
+    else $globaltimer=45000 // 0:45       // Perfect Agent
+    end
+    03C3: set_timer_to $globaltimer type 1 GXT 'T_LEFT' // Time Left
+    $OBJ4_STATUS=1
+end
+
+if and
+0038: $OBJ4_STATUS == 1
+0038: $globaltimer == 0
+then
+    $OTHER_TASKS_STATUS=99 // Mission Failed
+    00BC: show_text_highpriority GXT 'M42_025' time 4000 flag 1  // The enemy has discovered the disguise.
+end
+
+if 0038: $OBJ4_STATUS == 1
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 1 in_sphere 284.1462 1869.2987 8.7578 radius 1.0 1.0 1.0
+    then
+        // AS_actor move from one point to another
+        00BC: show_text_highpriority GXT 'M42_026' time 4000 flag 1  // (Area 51 Guard) So, you got here at last.
+        32@=0
+        $OBJ4_STATUS=2
+    end
+end
+
+if and
+0038: $OBJ4_STATUS == 2
+0029:   32@ >= 4000 
+then
+    00BC: show_text_highpriority GXT 'M42_027' time 4000 flag 1  // (Area 51 Guard) Everyone's been waiting for you...
+    32@=0
+    $OBJ4_STATUS=3
+end 
+
+if and
+0038: $OBJ4_STATUS == 3
+0029:   32@ >= 3000 
+then
+    $OBJ4_STATUS=4
+    014F: stop_timer $globaltimer
+    077A: set_actor 40@ acquaintance 3 to_actors_pedtype 0 // Dislike
+    140@=13.7578
+    141@=5.7578
+    32@=0
+end
+
+if and
+0038: $OBJ4_STATUS == 4
+0029:   32@ >= 2000 
+then 077A: set_actor 40@ acquaintance 4 to_actors_pedtype 0 // Hate
+end
+
+if 0038: $OBJ4_STATUS == 4
+then
+    if or
+    8038: not 140@ == 15.7578
+    8038: not 141@ == 3.7578
+    then
+        034E: move_object 248@ to 283.052 1869.42 15.7578 speed 0.0 0.0 0.01 flag 0
+        034E: move_object 249@ to 283.052 1869.42 3.7578 speed 0.0 0.0 0.01 flag 0
+        01BB: store_object 248@ position_to 199@ 198@ 140@
+        01BB: store_object 249@ position_to 199@ 198@ 141@
+    else
+        $OBJ4_STATUS=5
+        0187: 340@ = create_marker_above_actor 41@
+        0165: set_marker 340@ color_to 0 // Red
+    end
+end
+
+if 0038: $OBJ4_STATUS == 5
+then
+    if 0118:   actor 41@ dead 
+    then
+        0164: disable_marker 340@
+        04A5: store_dead_actor 41@ position_to 143@ 144@ 145@
+        0213: 281@ = create_pickup #keycard type 3 at 143@ 144@ 145@
+        03DC: 341@ = create_marker_above_pickup 281@
+        0165: set_marker 341@ color_to 0 // Red
+        $OBJ4_STATUS=6
+    end
+end
+
+if 0038: $OBJ4_STATUS == 6
+then
+    if 0214:   pickup 281@ picked_up
+    then
+        0164: disable_marker 341@
+        if 0038: $MISSION_DIFFICULTY == 1 // Special Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2         //Objective 2: Completed
+            $MOBJ2=1
+        end
+        if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2         //Objective 3: Completed
+            $MOBJ3=1
+        end
+        if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ4' time 2000 style 2         //Objective 4: Completed
+            $MOBJ4=1
+        end
+        00BC: show_text_highpriority GXT 'M42_028' time 4000 flag 1  // Picked up medlab 2 key card.
+        $OBJ4_STATUS=7
+        32@=0
+    end
+end
+
+if 0039: 142@ == 1
+then
+    if and
+    09ED:   actor $PLAYER_ACTOR is_within_field_of_view_actor 40@
+    8038: not $OBJ3_STATUS == 2 // Obtain and use lab technician Disguise
+    then
+        $OTHER_TASKS_STATUS=99 // Mission Failed
+        00BC: show_text_highpriority GXT 'M42_025' time 4000 flag 1 // The enemy has discovered the disguise.
+    end
+    if and
+    09ED:   actor $PLAYER_ACTOR is_within_field_of_view_actor 40@
+    0038: $OBJ3_STATUS == 2 // Obtain and use lab technician Disguise
+    8028:   not $OBJ4_STATUS >= 4
+    82D8: not actor $PLAYER_ACTOR current_weapon == 0 // Unarmed
+    then
+        $OTHER_TASKS_STATUS=99 // Mission Failed
+        00BC: show_text_highpriority GXT 'M42_025' time 4000 flag 1 // The enemy has discovered the disguise.
+    end    
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 5 - Rescue the crash survivor
+==================================================================}
+:M4_2_OBJECTIVE5
+if and
+0038:   $OBJ5_STATUS == 0
+0038:   $OBJ4_STATUS == 7 // Gain access to autopsy lab
+0029:   32@ >= 4000
+then
+    00BC: show_text_highpriority GXT 'M42_029' time 4000 flag 1 // (Joanna) The air's heavily recycled around here - must be near the autopsy lab.
+    $OBJ5_STATUS=1
+end
+
+if or
+0038:   $OBJ5_STATUS == 0
+0038:   $OBJ5_STATUS == 1
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 1 in_sphere 266.9524 1863.3798 8.7649 radius 1.0 1.0 1.0 
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            if 0038:   $OBJ5_STATUS == 0
+            then 00BC: show_text_highpriority GXT 'MDRLCK' time 4000 flag 1 // The door is locked.
+            end
+            if 0038:   $OBJ5_STATUS == 1
+            then
+                03E6: remove_text_box
+                0687: clear_actor $PLAYER_ACTOR task
+                04ED: load_animation "crib" 
+                repeat
+                wait 0 ms
+                until 04EE: animation "crib" loaded
+                0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+                04EF: release_animation "crib"
+                0173: set_actor $PLAYER_ACTOR Z_angle_to 0.0   
+                0164: disable_marker 350@
+                150@=7.4578
+                $OBJ5_STATUS=2
+            end
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_030' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to use ~r~keycard~w~.
+            33@=0
+            end
+        end
+    end          
+end
+
+if 0038: $OBJ5_STATUS == 2
+then
+    if 8038: not 150@ == 10.3578
+    then
+        034E: move_object 270@ to 268.652 1864.72 10.3578 speed 0.0 0.0 0.02 flag 0
+        01BB: store_object 270@ position_to 199@ 198@ 150@
+    else $OBJ5_STATUS=3
+    end
+end
+
+if or
+0038: $OBJ5_STATUS == 2
+0038: $OBJ5_STATUS == 3
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 268.5947 1873.5682 8.6094 radius 1.0 1.0 1.0 
+    then
+        if and
+        0038: $MISSION_DIFFICULTY == 1 // Agent
+        0038: $MOBJ1 == 1 // Obtain and use lab technician Disguise
+        0038: $MOBJ2 == 1 // Gain access to autopsy lab
+        then $OBJ5_STATUS=4
+        end
+        if and
+        0038: $MISSION_DIFFICULTY == 2 // Special Agent
+        0038: $MOBJ1 == 1 // Locate conspiracy evidence
+        0038: $MOBJ2 == 1 // Obtain and use lab technician Disguise
+        0038: $MOBJ3 == 1 // Gain access to autopsy lab
+        then $OBJ5_STATUS=4
+        end
+        if and
+        0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        0038: $MOBJ1 == 1 // Destroy computer records
+        0038: $MOBJ2 == 1 // Locate conspiracy evidence
+        0038: $MOBJ3 == 1 // Obtain and use lab technician Disguise
+        0038: $MOBJ4 == 1 // Gain access to autopsy lab
+        then $OBJ5_STATUS=4
+        end
+    end
+end
+
+if and
+0038: $OBJ5_STATUS == 4
+00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 268.5947 1873.5682 8.6094 radius 1.0 1.0 1.0 
+then
+    023C: load_special_actor 'maian1' as 1
+    038B: load_requested_models 
+    repeat
+    wait 0
+    until 023D:   special_actor 1 loaded
+    009A: 50@ = create_actor_pedtype 4 model #special01 at 263.2083 1882.6573 -29.3429
+    0173: set_actor 50@ Z_angle_to 170.0 
+    0296: unload_special_actor 1 
+    00BC: show_text_highpriority GXT 'M42_031' time 4000 flag 1 // (Carrington) There he is, Jo! Hurry or you'll be too late!
+    $globaltimer=60000 // 1:00
+    03C3: set_timer_to $globaltimer type 1 GXT 'T_LEFT' // Time Left
+    $OBJ5_STATUS=5
+end
+
+if and
+0038: $OBJ5_STATUS == 5
+0038: $globaltimer == 0
+then
+    $OTHER_TASKS_STATUS=99 // Mission Failed
+    00BC: show_text_highpriority GXT 'M42_033' time 4000 flag 1 // Elvis has been killed.
+end
+
+if 0038: $OBJ5_STATUS == 5
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 1 in_sphere 268.8524 1883.3784 -30.0937 radius 1.0 1.0 1.0
+    then
+        if 0038: $MISSION_DIFFICULTY == 1 // Special Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2         //Objective 3: Completed
+            $MOBJ3=1
+        end
+        if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ4' time 2000 style 2         //Objective 4: Completed
+            $MOBJ4=1
+        end
+        if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        then 
+            00BA: show_text_styled GXT 'MOBJ5' time 2000 style 2         //Objective 5: Completed
+            $MOBJ5=1
+        end
+        014F: stop_timer $globaltimer
+        $OBJ5_STATUS=6
+    end
+end
+0051: return
+
+{=================================================================
+CUTSCENES
+==================================================================}
+:RESCUE_OUTRO
+0051: return
+
+{=================================================================
+LOCAL SUBROUTINES
+==================================================================}
+{=================================================================
+Final routines
+==================================================================}
+//––––––––––––-
+:RESCUE_PASSED
+0394: play_music 1
+$TUT_MISSIONS_PASSED += 1
+Player.Money($PLAYER_CHAR) += 10000
+01E3: show_text_1number_styled GXT 'M_PASS' number 10000 time 5000 style 1 // MISSION PASSED!~n~~w~$~1~
+return
+
+//––––––––––––-
+:RESCUE_FAIL
+00BA: show_text_styled GXT 'M_FAIL' time 5000 style 1 // ~r~MISSION FAILED!
+//0555: remove_weapon 31 from_actor $PLAYER_ACTOR
+return
+
+//––––––––––––-
+:RESCUE_CLEANUP
+$ONMISSION = 0
+{CONDICIONES GENERALES}
+010D: set_player $PLAYER_CHAR wanted_level_to 0
+01F0: set_max_wanted_level_to 6 
+{ACTORES}
+{OBJECTS}
+{MARKERS / CHECKPOINTS}
+//0A41: destroy_entrance_marker BuildingDoor
+08E7: disable_entrance_markers 0
+//0164: disable_marker 304@
+{SPHERES}
+//03BD: destroy_sphere 300@ 
+{DECISIONS}
+065C: release_decision_maker 400@  // Comportamiento limpio para actores especiales
+065C: release_decision_maker $clean  // Variable de ENABLE_CAMSPY
+{VARIABLES GLOBALES}
+$MOBJ1 = 0
+$MOBJ2 = 0
+$MOBJ3 = 0
+$MOBJ4 = 0
+$MOBJ5 = 0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+mission_cleanup
+return
+
+
+
+
+
+
+
+//––––-External script 0–––––
+// put your external scripts here

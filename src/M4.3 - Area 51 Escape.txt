@@ -1,0 +1,1846 @@
+DEFINE MISSIONS 2
+DEFINE MISSION 0 AT @INITIAL
+DEFINE MISSION 1 AT @ESCAPE
+
+
+DEFINE EXTERNAL_SCRIPTS -1 // Use -1 in order not to compile AAA script
+//DEFINE SCRIPT {NAME} AT {LABEL} @
+
+DEFINE UNKNOWN_EMPTY_SEGMENT 0
+
+DEFINE UNKNOWN_THREADS_MEMORY 0
+
+{$VERSION 3.0.0000}
+var
+$PLAYER_CHAR: Player
+end // var
+03A4: name_thread 'MAIN'
+01F0: set_max_wanted_level_to 6
+0111: toggle_wasted_busted_check 0
+00C0: set_current_time_hours_to 8 minutes_to 0
+04E4: unknown_refresh_game_renderer_at 1049.9067 1031.3267
+03CB: set_rendering_origin_at 1049.9067 1031.3267 10.685
+0053: $PLAYER_CHAR = create_player #NULL at 1049.9067 1031.3267 10.685 //1453.0439 -1841.0349 13.5469
+01F5: $PLAYER_ACTOR = create_player_actor $PLAYER_CHAR
+07AF: $PLAYER_GROUP = player $PLAYER_CHAR group
+0373: set_camera_directly_behind_player
+01B6: set_weather 0
+0001: wait 0 ms
+087B: set_player $PLAYER_CHAR clothes_texture "PLAYER_FACE" model "HEAD" body_part 1
+087B: set_player $PLAYER_CHAR clothes_texture "JEANSDENIM" model "JEANS" body_part 2
+087B: set_player $PLAYER_CHAR clothes_texture "SNEAKERBINCBLK" model "SNEAKER" body_part 3
+087B: set_player $PLAYER_CHAR clothes_texture "VEST" model "VEST" body_part 0
+070D: rebuild_player $PLAYER_CHAR
+01B4: toggle_player $PLAYER_CHAR can_move 0
+016A: fade 0 time 0
+04BB: select_interior 0
+0629: change_integer_stat 181 to 4
+016C: restart_if_wasted_at 2027.77 -1420.52 15.99 angle 137.0 town_number 0
+016D: restart_if_busted_at 1550.68 -1675.49 14.51 angle 90.0 town_number 0
+0180: set_on_mission_flag_to $ONMISSION // Note: your missions have to use the variable defined here
+0004: $DEFAULT_WAIT_TIME = 250
+03E6: remove_text_box
+
+//0247: load_model #sofybu
+023C: load_special_actor 'marisa' as 1
+038B: load_requested_models
+repeat
+wait 0 ms
+until {0248:   model #sofybu available} 023D:   special_actor 1 loaded
+09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+//0249: release_model #sofybu
+0296: unload_special_actor 1
+
+wait 1000 ms
+016A: fade 1 time 2000
+01B4: toggle_player $PLAYER_CHAR can_move 1
+0417: start_mission 0 // Initial
+wait 0
+// put your create_thread commands here
+00D7: create_thread @CI_MISSIONS_SNIFFER
+
+:MAIN_LOOP
+0001: wait $DEFAULT_WAIT_TIME ms
+0002: jump @MAIN_LOOP
+
+
+
+
+{==============================================================
+GLOBAL SUBROUTINES
+===============================================================}
+:SUB_FADE_500MS
+0169: set_fade_color_RGB 0 0 0 
+016A: fade 0 time 500 
+
+:LITCAS_282
+00D6: if 
+016B:   fading 
+004D: jump_if_false @LITCAS_306 
+0001: wait 0 ms 
+0002: jump @LITCAS_282 
+
+:LITCAS_306
+0051: return 
+//------------------------
+:TELEPORT
+// Seleccionando Interior y coloc·ndo al jugador en Èl
+0050: gosub @SUB_FADE_500MS 
+01B4: toggle_player $PLAYER_CHAR can_move 0
+04BB: select_interior $ACTIVE_INTERIOR 
+0860: link_actor $PLAYER_ACTOR to_interior $ACTIVE_INTERIOR 
+04E4: unknown_refresh_game_renderer_at $PLAYER_X $PLAYER_Y 
+03CB: set_rendering_origin_at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+//04F9: set_interior 1 color_to 0 
+00A1: put_actor $PLAYER_ACTOR at $PLAYER_X $PLAYER_Y $PLAYER_Z 
+0173: set_actor $PLAYER_ACTOR Z_angle_to $PLAYER_ANGLE 
+0373: set_camera_directly_behind_player 
+//02EB: restore_camera_with_jumpcut
+0051: return
+//------------------------
+:FADEOUT
+0001: wait 1000 ms 
+016A: fade 1 time 1000 
+01B4: set_player $PLAYER_CHAR can_move 1
+0051: return
+//------------------------
+:JOANNA_RESPONSE
+0209: $RAND = random_int_in_ranges 0 3
+00D6: if
+0039:   $RAND == 0
+004D: jump_if_false @J01 
+00BC: show_text_highpriority GXT 'MJO_1' time 4000 flag 1  // (Joanna) Received.
+:J01
+00D6: if
+0039:   $RAND == 1
+004D: jump_if_false @J02 
+00BC: show_text_highpriority GXT 'MJO_2' time 4000 flag 1  // (Joanna) Understood.
+:J02
+00D6: if
+0039:   $RAND == 2
+004D: jump_if_false @J03 
+00BC: show_text_highpriority GXT 'MJO_3' time 4000 flag 1  // (Joanna) Confirmed.
+:J03
+00D6: if
+0039:   $RAND == 3
+004D: jump_if_false @J04 
+00BC: show_text_highpriority GXT 'MJO_4' time 4000 flag 1  // (Joanna) Affirmative.
+:J04
+0051: return  
+//------------------------
+:SELECT_DIFFICULTY
+01B4: set_player $PLAYER_CHAR can_move 0
+0512:  show_permanent_text_box 'MHLP01'
+08D4: $SEL_DIF_MENU = create_panel_with_title 'MTBL01' position 29.0 145.0 width {220.0} 300.0 columns 1 interactive 1 background 1 alignment 1
+08DB:  set_panel $SEL_DIF_MENU column 0 header s$MISSION data 'MDIF1' 'MDIF2' 'MDIF3' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY' 'DUMMY'
+repeat
+wait 0 ms
+until 00E1: player 0 pressed_key 16 
+08D7: $choice = panel $SEL_DIF_MENU active_row
+08DA: remove_panel $SEL_DIF_MENU
+03E6: remove text box
+if $choice == 0
+then
+$MISSION_DIFFICULTY = 1          // Agent
+end
+if $choice == 1
+then
+$MISSION_DIFFICULTY = 2          // Special Agent
+end
+if $choice == 2
+then
+$MISSION_DIFFICULTY = 3          // Perfect Agent
+end
+0051: return  
+//------------------------
+:MISSION_BAR
+if 00E1:   player 0 pressed_key 11    //~k~~CONVERSATION_YES~
+then
+    015D: set_gamespeed  0.001 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 0 
+
+    038E: draw_box_position 400.0 270.0 size 400.0 220.0 RGBA 123 34 111 75
+    038E: draw_box_position 400.0 185.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.5 1.2
+    0343: set_text_draw_linewidth 600.0 
+    033E: set_draw_text_position 225.0 170.0 GXT s$MISSION    // Mission Name
+
+    if 85AD:   not s$OBJ1 == 'DUMMY'
+    then
+        // Objective 1
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 200.0 GXT 'OBJ1'
+        
+        // Objective 1 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 200.0 GXT s$OBJ1
+        
+        // Objective 1 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ1 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 210.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ2 == 'DUMMY'
+    then
+        // Objective 2
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 225.0 GXT 'OBJ2'
+        
+        // Objective 2 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 225.0 GXT s$OBJ2
+        
+        // Objective 2 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ2 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 235.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ3 == 'DUMMY'
+    then
+        // Objective 3
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 250.0 GXT 'OBJ3'
+        
+        // Objective 3 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 250.0 GXT s$OBJ3
+        
+        // Objective 3 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ3 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 260.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ4 == 'DUMMY'
+    then
+        // Objective 4
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 275.0 GXT 'OBJ4'
+        
+        // Objective 4 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 275.0 GXT s$OBJ4
+        
+        // Objective 4 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ4 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 285.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    if 85AD:   not s$OBJ5 == 'DUMMY'
+    then
+        // Objective 5
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 225.0 300.0 GXT 'OBJ5'
+        
+        // Objective 5 Entry
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        033E: set_draw_text_position 315.0 300.0 GXT s$OBJ5
+        
+        // Objective 5 Status (Complete / Incomplete)
+        033F: set_text_draw_letter_size 0.4 1.0
+        0343: set_text_draw_linewidth 600.0 
+        03E4: enable_text_draw_align_right 1
+        if 0038: $MOBJ5 == 0
+        then
+        0340: set_text_draw_RGBA 250 164 96 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJINC'
+        else
+        0340: set_text_draw_RGBA 135 206 235 255 
+        033E: set_draw_text_position 540.0 310.0 GXT 'OBJCMP' 
+        end
+    end 
+
+    038E: draw_box_position 400.0 337.0 size 340.0 1.2 RGBA 255 255 255 60
+
+    033F: set_text_draw_letter_size 0.4 1.0
+    0343: set_text_draw_linewidth 600.0 
+    03E4: enable_text_draw_align_right 1
+    033E: set_draw_text_position 540.0 340.0 GXT 'OBTB01'     // Abort Mission
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+        
+    repeat
+    wait 0 ms
+    until 00E1:   player 0 pressed_key 11
+
+    015D: set_gamespeed  1.0 // 0.3 o 1.0 slow motion
+    01B4: set_player $PLAYER_CHAR can_move 1
+    03F0: enable_text_draw 0 
+
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 11
+end
+0051: return  
+
+//------------------------
+:ENABLE_CAMSPY
+if and
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+02D8:   actor $PLAYER_ACTOR current_weapon == 43 // Cam
+0038:   $CAMSPY_STATUS == 0 // Player has not released camspy
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $player_interior // the interior where player lies
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0009: $newposition[0] += 1.0
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0009: $newposition[1] += 1.0
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+    009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL02 at $oldposition[0] $oldposition[1] $oldposition[2]
+    0173: set_actor $CAMSPY Z_angle_to $old_angle
+    060A: create_decision_maker_type 0 store_to $clean
+    060B: set_actor $CAMSPY decision_maker_to $clean
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    01B9: set_actor $PLAYER_ACTOR armed_weapon_to 0 // Unarmed
+    $CAMSPY_STATUS=1
+    0086: $old_area_status = $AREA_STATUS // (float)
+end
+
+if and
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+0039:   $CAMSPY_STATUS == 1 // Player IS camspy
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    0086: $new_angle = $old_angle // (float) 
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $camspy_interior // the interior where camspy lies
+
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+
+    04BB: select_interior $player_interior // the interior where player lies
+    0860: link_actor $PLAYER_ACTOR to_interior $player_interior 
+    04E4: unknown_refresh_game_renderer_at $newposition[0] $newposition[1]
+    03CB: set_rendering_origin_at $newposition[0] $newposition[1] $newposition[2]
+    009B: destroy_actor $CAMSPY
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL02
+    if 003A:   $player_interior == $camspy_interior // (int)
+    then
+        009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL01 at $oldposition[0] $oldposition[1] $oldposition[2]
+        0173: set_actor $CAMSPY Z_angle_to $old_angle
+        060A: create_decision_maker_type 0 store_to $clean
+        060B: set_actor $CAMSPY decision_maker_to $clean
+    end
+    0173: set_actor $PLAYER_ACTOR Z_angle_to $new_angle
+    01B9: set_actor $PLAYER_ACTOR armed_weapon_to 43 // Cam
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    $CAMSPY_STATUS=2
+    0086: $current_area_status = $AREA_STATUS // (float)
+    0086: $AREA_STATUS = $old_area_status // (float)
+    0086: $old_area_status = $current_area_status // (float)
+    $m_entrance_created=0
+end
+
+if and
+0039:   $CAMSPY_STATUS == 1 // Player IS camspy
+82D8:   not actor $PLAYER_ACTOR current_weapon == 43 // Cam
+then 01B9: set_actor $PLAYER_ACTOR armed_weapon_to 43 // Cam
+end
+
+if and
+0039:   $CAMSPY_STATUS == 2 // Player released camspy and has not taken it
+003B:   $player_interior == $camspy_interior // (int)
+then
+    if 00F2:   actor $PLAYER_ACTOR near_actor $CAMSPY radius 1.0 1.0 1.0
+    then
+        01C2: remove_references_to_actor $CAMSPY // Like turning an actor into a random pedestrian 
+        009B: destroy_actor $CAMSPY
+        00BC: show_text_highpriority GXT 'CAMSPY1' time 4000 flag 1  // Picked up your CamSpy.
+        017B: set_actor $PLAYER_ACTOR weapon 43 ammo_to 20 
+        $CAMSPY_STATUS=0
+    end
+end
+
+if and
+0039:   $CAMSPY_STATUS == 2 // Player released camspy and has not taken it
+02D8:   actor $PLAYER_ACTOR current_weapon == 43 // Cam
+00E1:   player 0 pressed_key 15 // Enter/Intro 
+then
+    repeat
+    wait 0 ms
+    until 80E1: not player 0 pressed_key 15 // Wait for release key
+    0086: $newposition[0] = $oldposition[0] // (float) 
+    0086: $newposition[1] = $oldposition[1] // (float) 
+    0086: $newposition[2] = $oldposition[2] // (float) 
+    0086: $new_angle = $old_angle // (float) 
+    00A0: store_actor $PLAYER_ACTOR position_to $oldposition[0] $oldposition[1] $oldposition[2]
+    0172: $old_angle = actor $PLAYER_ACTOR Z_angle
+    077E: get_active_interior_to $player_interior // the interior where player lies
+
+    023C: load_special_actor 'TENPEN' as 1
+    023C: load_special_actor 'moko' as 2
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 023D: special_actor 1 loaded and 023D: special_actor 2 loaded
+
+    04BB: select_interior $camspy_interior // the interior where camspy lies
+    0860: link_actor $PLAYER_ACTOR to_interior $camspy_interior 
+    04E4: unknown_refresh_game_renderer_at $newposition[0] $newposition[1]
+    03CB: set_rendering_origin_at $newposition[0] $newposition[1] $newposition[2]
+    009B: destroy_actor $CAMSPY
+    00A1: put_actor $PLAYER_ACTOR at $newposition[0] $newposition[1] $newposition[2]
+    09C7: change_player $PLAYER_CHAR model_to #SPECIAL01
+    0173: set_actor $PLAYER_ACTOR Z_angle_to $new_angle
+    if 003B:   $player_interior == $camspy_interior // (int) 
+    then
+        009A: $CAMSPY = create_actor_pedtype 23 model #SPECIAL02 at $oldposition[0] $oldposition[1] $oldposition[2]
+        0173: set_actor $CAMSPY Z_angle_to $old_angle
+        060A: create_decision_maker_type 0 store_to $clean
+        060B: set_actor $CAMSPY decision_maker_to $clean
+    end
+    0296: unload_special_actor 1
+    0296: unload_special_actor 2
+    $CAMSPY_STATUS=1
+    0086: $current_area_status = $AREA_STATUS // (float)
+    0086: $AREA_STATUS = $old_area_status // (float)
+    0086: $old_area_status = $current_area_status // (float)
+    $m_entrance_created=0
+end
+0051: return  
+
+
+
+
+
+{==============================================================
+MISSION SNIFFER
+===============================================================}
+// put your mods (threads) here
+:CI_MISSIONS_SNIFFER
+thread "CI_SNIFF"
+$MARKER_CARRINGTON_INSTITUTE = Marker.CreateIconAndSphere(42, $X_CARRINGTON_INSTITUTE, $Y_CARRINGTON_INSTITUTE, $Z_CARRINGTON_INSTITUTE)
+repeat
+wait $DEFAULT_WAIT_TIME
+if and
+player.Defined($PLAYER_CHAR)
+$ONMISSION == 0
+then
+    if and
+        00FF: actor $PLAYER_ACTOR sphere 0 in_sphere $X_CARRINGTON_INSTITUTE $Y_CARRINGTON_INSTITUTE $Z_CARRINGTON_INSTITUTE radius 1.0 1.0 2.0 on_foot
+        Player.Controllable($PLAYER_CHAR)
+        $TUT_MISSIONS_PASSED == 0
+    then
+        054C: use_GXT_table 'PD'
+        $ONMISSION = 1
+        s$MISSION = 'M4_3' // Area 51: Escape
+        0050: gosub @SELECT_DIFFICULTY
+        00BA: show_text_styled GXT 'M4_3' time 1000 style 2 // Area 51: Escape
+        01B4: toggle_player $PLAYER_CHAR can_move 0
+        0050: gosub @SUB_FADE_500MS 
+        start_mission 1
+    end
+end
+until $TUT_MISSIONS_PASSED == 1
+marker.Disable($MARKER_CARRINGTON_INSTITUTE)
+end_thread
+
+//ññññ-Mission 0ññññÅE
+{==============================================================
+GLOBAL INITIALIZATIONS
+===============================================================}
+:INITIAL
+$TUT_MISSIONS_PASSED = 0
+$ONMISSION = 0
+     
+$X_CARRINGTON_INSTITUTE = 1046.3639
+$Y_CARRINGTON_INSTITUTE = 1015.7791
+$Z_CARRINGTON_INSTITUTE = 11.0
+//0629: change_integer_stat 225 to 999 // capacidad pulmonar al m·ximo jolines t˙å no la empalmeis hostia!
+
+model.Load(#FCR900)
+038B: load_requested_models
+
+:INITIAL_LOAD
+wait 0 ms
+if
+model.Available(#FCR900)
+004D: jump_if_false @INITIAL_LOAD
+
+0674: set_car_model #FCR900 numberplate "DARK_"
+$darkbike = car.Create(#FCR900,1452.9561, -1837.4128, 13.5469)
+end_thread
+
+
+
+
+
+
+//ññññ-Mission 1ññññÅE
+{==============================================================
+AREA 51: ESCAPE
+===============================================================}
+// Mission wrapper
+:ESCAPE
+thread 'M4_3'
+gosub @ESCAPE_MAIN
+if wasted_or_busted
+then
+gosub @ESCAPE_FAIL
+end
+gosub @ESCAPE_CLEANUP
+end_thread
+
+//ññññññññññññ-
+:ESCAPE_MAIN
+const         
+{==============================================================================
+Nomenclatura propuesta:     0-99: actors,vehicles 
+                            100-199: flags y variables numÈricas de uso general
+                            200-299: objects or pickups
+                            300-399: markers/spheres/checkpoints
+                            400-499: decision makers, rutas y comportamientos
+===============================================================================     }
+    // ======= Entrance Markers
+    Facility1Hangar1 = 300@
+    Facility1Hangar3 = 301@
+    Hangar1Facility1 = 302@
+    Hangar1Hangar2 = 303@
+    Hangar2Hangar1 = 304@
+    Hangar2Facility2 = 305@
+    Facility2Hangar2 = 306@
+    Facility2Hangar3 = 307@
+    Hangar3Facility2 = 308@
+    Hangar3Facility1 = 309@
+    Facility2Hangar4 = 318@
+    Hangar4Facility2 = 319@
+    Hangar5Facility1 = 317@
+    Hangar5Hangar3   = 316@
+    // ======= Obj1
+    // 210@: Alien Medpack - 310@: Marker
+    // ======= Obj2
+    // 20@: Jonnathan - 320@: Marker
+    // ======= Obj3
+    // 330@: Sphere - 331@: Checkpoint
+    // 130@ - 131@ - 132@: Bridge Position
+    // ======= Obj4
+    // ======= Obj5
+    // ======= General
+end                                                                                                                                                            // ======= Obj1
+
+04BB: select_interior 0 
+0860: link_actor $PLAYER_ACTOR to_interior 0 
+
+// Wanted level of the mission
+010D: set_player $PLAYER_CHAR wanted_level_to 0 
+01F0: set_max_wanted_level_to 0 
+
+// Initialize Mission Time
+//00C0: set_current_time_hours_to 21 minutes_to 0
+
+// Initialize global variables for Mission Status Bar
+if 0038:   $MISSION_DIFFICULTY == 1  // Agent
+then s$OBJ1='M43OB2'  // Rendezvous with CI spy
+s$OBJ2='M43OB3'       // Locate secret hangar
+s$OBJ3='M43OB5'       // Escape from Area 51
+s$OBJ4='DUMMY'
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 2  // Special Agent
+then s$OBJ1='M43OB2'  // Rendezvous with CI spy
+s$OBJ2='M43OB3'       // Locate secret hangar
+s$OBJ3='M43OB4'       // Revive Maian bodyguard
+s$OBJ4='M43OB5'       // Escape from Area 51
+s$OBJ5='DUMMY'
+end
+if 0038:   $MISSION_DIFFICULTY == 3  // Perfect Agent
+then s$OBJ1='M43OB1'  // Locate alien tech medpack
+s$OBJ2='M43OB2'       // Rendezvous with CI spy
+s$OBJ3='M43OB3'       // Locate secret hangar
+s$OBJ4='M43OB4'       // Revive Maian bodyguard
+s$OBJ5='M43OB5'       // Escape from Area 51
+end
+
+//Spawn Objects
+
+//Spawn actor & Load models
+04E4: unknown_refresh_game_renderer_at 261.0905 1887.7181
+03CB: set_rendering_origin_at 261.0905 1887.7181 8.4375
+00A1: put_actor $PLAYER_ACTOR at 261.0905 1887.7181 8.4375//268.6396 1887.3866 -29.5312
+0173: set_actor $PLAYER_ACTOR Z_angle_to 180.0
+0373: set_camera_directly_behind_player 
+    
+0247: load_model #colt45
+038B: load_requested_models                                             
+repeat
+wait 0 ms
+until 0248: model #colt45 available    
+01B2: give_actor $PLAYER_ACTOR weapon 22 ammo 60 // Load the weapon model before using this 
+01B9: set_actor $PLAYER_ACTOR armed_weapon_to 22 // Colt 45
+0249: release_model #colt45
+
+:ESCAPE_START
+01B4: set_player $PLAYER_CHAR can_move 1 
+0050: gosub @FADEOUT
+
+//Debug
+
+// Initializing
+060A: create_decision_maker_type 0 store_to 400@    // clean behavior for special actors
+$MOBJ1=0
+$MOBJ2=0
+$MOBJ3=0
+$MOBJ4=0
+$MOBJ5=0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$AREA_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+$globaltimer=0
+$m_entrance_created=0
+08E7: disable_entrance_markers 1
+
+{==============================================================
+AREA 51: ESCAPE - MAIN LOOP
+===============================================================}
+repeat
+wait 0 ms
+    //--ENTRAR/SALIR DE LAS ZONAS--
+    0050: gosub @ESCAPE_CHECK_DOORS
+    
+    //--AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 1
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_3_OBJECTIVE2  // Rendezvous with CI spy
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_3_OBJECTIVE3  // Locate secret hangar
+        end
+
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_3_OBJECTIVE5  // Escape from Area 51
+        end
+    end
+     
+    //--SPECIAL AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 2
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_3_OBJECTIVE2  // Rendezvous with CI spy
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_3_OBJECTIVE3  // Locate secret hangar
+        end
+     
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_3_OBJECTIVE4  // Revive Maian bodyguard
+        end
+
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M4_3_OBJECTIVE5  // Escape from Area 51
+        end
+    end
+ 
+    //--PERFECT AGENT--
+    if
+    0039: $MISSION_DIFFICULTY == 3
+    then        
+        if 0039:   $MOBJ1 == 0
+        then 0050: gosub @M4_3_OBJECTIVE1  // Locate alien tech medpack
+        end
+
+        if 0039:   $MOBJ2 == 0
+        then 0050: gosub @M4_3_OBJECTIVE2  // Rendezvous with CI spy
+        end
+    
+        if 0039:   $MOBJ3 == 0
+        then 0050: gosub @M4_3_OBJECTIVE3  // Locate secret hangar
+        end
+     
+        if 0039:   $MOBJ4 == 0
+        then 0050: gosub @M4_3_OBJECTIVE4  // Revive Maian bodyguard
+        end
+
+        if 0039:   $MOBJ5 == 0
+        then 0050: gosub @M4_3_OBJECTIVE5  // Escape from Area 51
+        end
+    end
+
+    //--CONDICI”N DE VICTORIA--
+    if and
+    0039: $MISSION_DIFFICULTY == 1  // Agent
+    0039: $MOBJ1 == 1   // Rendezvous with CI spy
+    0039: $MOBJ2 == 1   // Locate secret hangar
+    0039: $MOBJ3 == 1   // Escape from Area 51
+    then
+    0050: gosub @ESCAPE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 2  // Special Agent
+    0039: $MOBJ1 == 1   // Rendezvous with CI spy
+    0039: $MOBJ2 == 1   // Locate secret hangar
+    0039: $MOBJ3 == 1   // Revive Maian bodyguard
+    0039: $MOBJ4 == 1   // Escape from Area 51
+    then
+    0050: gosub @ESCAPE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+    if and
+    0039: $MISSION_DIFFICULTY == 3  // Perfect Agent
+    0039: $MOBJ1 == 1   // Locate alien tech medpack
+    0039: $MOBJ2 == 1   // Rendezvous with CI spy
+    0039: $MOBJ3 == 1   // Locate secret hangar
+    0039: $MOBJ4 == 1   // Revive Maian bodyguard
+    0039: $MOBJ5 == 1   // Escape from Area 51
+    then
+    0050: gosub @ESCAPE_OUTRO // cutscene
+    $ALLOBJECTIVES = 1
+    end
+
+    //ATENDER OTRAS TAREAS INDEPENDIENTES DE LOS OBJETIVOS
+    0050: gosub @M4_3_OTHER_TASKS
+
+    //--CONDICI”N DE FRACASO--    
+    00D6: if 
+    8039: not $OTHER_TASKS_STATUS == 99
+    004D: jump_if_false @ESCAPE_FAIL 
+
+    //DESPLEGAR BARRA DE STATUS DE MISI”N TRAS PULSACI”N DE TECLA ESPECIAL -OBJETIVOS COMPLETADOS Y OBJETIVOS FALTANTES-
+    0050: gosub @MISSION_BAR
+
+until 0039: $ALLOBJECTIVES == 1
+0002: jump @ESCAPE_PASSED 
+
+{==============================================================
+Maquina de estado de los teletransportadores
+===============================================================}
+:ESCAPE_CHECK_DOORS
+if 0038: $AREA_STATUS == 0     // Facility 1
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        if 8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+        then
+            0A40: Facility1Hangar1 = create_entrance_marker_at 277.8697 1839.8815 7.8281 color 14
+            0A40: Facility2Hangar2 = create_entrance_marker_at 301.1304 1816.3123 4.7109 color 14
+        end
+        0A40: Facility1Hangar3 = create_entrance_marker_at 329.7906 1839.3451 7.8281 color 14
+        0A40: Facility2Hangar3 = create_entrance_marker_at 200.1332 1869.5438 13.147 color 14
+        
+        if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        then 0A40: Facility2Hangar4 = create_entrance_marker_at 256.7956 1802.0039 7.5418 color 14
+        end
+
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_FACILITY
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if and
+        8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+        00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 277.8697 1839.8815 7.8281 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 1    // Hangar 1
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = -358.7884
+            $PLAYER_Y = 1600.5769
+            $PLAYER_Z = 76.5446
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Hangar 1
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 329.7906 1839.3451 7.8281 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 6    // Hangar 5
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1266.6642
+            $PLAYER_Y = -36.2289
+            $PLAYER_Z = 1015.8456
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Hangar 5
+        end
+          
+        if and
+        8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+        00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 301.1304 1816.3123 4.7109 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            if 8038: not $MISSION_DIFFICULTY == 3 // Special Agent
+            then
+                $AREA_STATUS = 1    // Hangar 1
+                0050: gosub @ESCAPE_REMOVE_MARKERS
+                $ACTIVE_INTERIOR = 0
+                $PLAYER_X = -352.2618  
+                $PLAYER_Y = 1606.8287
+                $PLAYER_Z = 76.0784
+                $PLAYER_ANGLE = 0.0
+            else // $MISSION_DIFFICULTY == 3 // Perfect Agent
+                $AREA_STATUS = 2    // Hangar 2
+                0050: gosub @ESCAPE_REMOVE_MARKERS
+                $ACTIVE_INTERIOR = 1
+                $PLAYER_X = 1417.462
+                $PLAYER_Y = 5.1419
+                $PLAYER_Z = 1007.8881
+                $PLAYER_ANGLE = 180.0
+            end
+            0050: gosub @TELEPORT // Teleport
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 200.1332 1869.5438 13.147 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 4    // Hangar 3
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1292.9238
+            $PLAYER_Y = 5.8879
+            $PLAYER_Z = 1001.0093
+            $PLAYER_ANGLE = 180.0
+            0050: gosub @TELEPORT // Teleport to Hangar 3
+        end
+        if and
+        0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+        00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 256.7956 1802.0039 7.5418 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 5    // Hangar 4
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1307.2059
+            $PLAYER_Y = 5.3156
+            $PLAYER_Z = 1008.3984
+            $PLAYER_ANGLE = 180.0
+            0050: gosub @TELEPORT // Teleport to Hangar 4
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 1     // Hangar 1
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: Hangar1Facility1 = create_entrance_marker_at -357.2286 1600.4785 76.4877 color 14
+        0A40: Hangar1Hangar2 = create_entrance_marker_at -352.2063 1605.7944 76.1117 color 14
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_HANGAR1
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere -357.2286 1600.4785 76.4877 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Facility 1
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 283.7599
+            $PLAYER_Y = 1839.7635
+            $PLAYER_Z = 7.7266
+            $PLAYER_ANGLE = 270.0
+            0050: gosub @TELEPORT // Teleport to Facility 1
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere -352.2063 1605.7944 76.1117 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            if 8038: not $MISSION_DIFFICULTY == 3 // Special Agent
+            then
+                $AREA_STATUS = 0    // Facility 2
+                0050: gosub @ESCAPE_REMOVE_MARKERS
+                $ACTIVE_INTERIOR = 0
+                $PLAYER_X = 299.7322  
+                $PLAYER_Y = 1816.4912
+                $PLAYER_Z = 4.7109
+                $PLAYER_ANGLE = 90.0
+            else      // $MISSION_DIFFICULTY == 3    Perfect Agent
+                $AREA_STATUS = 2    // Hangar 2
+                0050: gosub @ESCAPE_REMOVE_MARKERS
+                $ACTIVE_INTERIOR = 1
+                $PLAYER_X = 1416.2827
+                $PLAYER_Y = 4.0729
+                $PLAYER_Z = 1000.9219
+                $PLAYER_ANGLE = 90.0
+            end
+            0050: gosub @TELEPORT // Teleport (depends on the difficulty status)
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 2     // Hangar 2
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: Hangar2Hangar1 = create_entrance_marker_at 1419.2202 4.1239 1001.9364 color 14
+        0A40: Hangar2Facility2 = create_entrance_marker_at 1417.2153 6.5381 1007.8888 color 14
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_HANGAR2
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1419.2202 4.1239 1001.9364 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 1    // Hangar 1
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = -352.2618  
+            $PLAYER_Y = 1606.8287
+            $PLAYER_Z = 76.0784
+            $PLAYER_ANGLE = 0.0
+            0050: gosub @TELEPORT // Teleport to Hangar 1
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1417.2153 6.5381 1007.8888 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Facility 2
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 299.7322  
+            $PLAYER_Y = 1816.4912
+            $PLAYER_Z = 4.7109
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Facility 2
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 4     // Hangar 3
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: Hangar3Facility2 = create_entrance_marker_at 1292.7725 7.8662 1001.0078 color 14
+        0A40: Hangar3Facility1 = create_entrance_marker_at 1248.7545 -57.6626 1008.4036 color 14
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_HANGAR3
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1292.7725 7.8662 1001.0078 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Facility 2
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 201.688
+            $PLAYER_Y = 1869.6967
+            $PLAYER_Z = 13.1406
+            $PLAYER_ANGLE = 270.0
+            0050: gosub @TELEPORT // Teleport to Facility 2
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1248.7545 -57.6626 1008.4036 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 6    // Hangar 5
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1248.176
+            $PLAYER_Y = -28.2875
+            $PLAYER_Z = 1015.8456
+            $PLAYER_ANGLE = 180.0
+            0050: gosub @TELEPORT // Teleport to Hangar 5
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 5     // Hangar 4
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: Hangar4Facility2 = create_entrance_marker_at 1307.1196 7.2655 1008.3984 color 14
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_HANGAR4
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1307.1196 7.2655 1008.3984 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Facility 2
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 255.649
+            $PLAYER_Y = 1802.0736
+            $PLAYER_Z = 7.4857
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Facility 2
+        end  
+    end
+end
+
+if 0038: $AREA_STATUS == 6     // Hangar 5
+then
+    if 0039:   $m_entrance_created == 0
+    then
+        0A40: Hangar5Facility1 = create_entrance_marker_at 1268.2324 -36.5494 1015.8456 color 14
+        0A40: Hangar5Hangar3 = create_entrance_marker_at 1248.1075 -26.3727 1015.8456 color 14
+        0050: gosub @ESCAPE_REMOVE_OBJECTS
+        0050: gosub @ESCAPE_SPAWN_OBJECTS_HANGAR5
+        0050: gosub @FADEOUT
+        $m_entrance_created=1
+    else
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1268.2324 -36.5494 1015.8456 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 0    // Facility 1
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 0
+            $PLAYER_X = 325.6859
+            $PLAYER_Y = 1839.6472
+            $PLAYER_Z = 7.7266
+            $PLAYER_ANGLE = 90.0
+            0050: gosub @TELEPORT // Teleport to Facility 1
+        end  
+        if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1248.1075 -26.3727 1015.8456 radius 1.0 1.0 1.0
+        then
+            $m_entrance_created = 0
+            $AREA_STATUS = 4    // Hangar 3
+            0050: gosub @ESCAPE_REMOVE_MARKERS
+            $ACTIVE_INTERIOR = 18
+            $PLAYER_X = 1251.8113
+            $PLAYER_Y = -57.637
+            $PLAYER_Z = 1008.4036
+            $PLAYER_ANGLE = 270.0
+            0050: gosub @TELEPORT // Teleport to Hangar 3
+        end  
+    end
+end
+0051: return
+
+:ESCAPE_REMOVE_MARKERS
+0A41: destroy_entrance_marker Facility1Hangar1 
+0A41: destroy_entrance_marker Facility1Hangar3 
+0A41: destroy_entrance_marker Hangar1Facility1 
+0A41: destroy_entrance_marker Hangar1Hangar2 
+0A41: destroy_entrance_marker Hangar2Hangar1 
+0A41: destroy_entrance_marker Hangar2Facility2 
+0A41: destroy_entrance_marker Facility2Hangar2 
+0A41: destroy_entrance_marker Facility2Hangar3 
+0A41: destroy_entrance_marker Hangar3Facility2 
+0A41: destroy_entrance_marker Hangar3Facility1 
+0A41: destroy_entrance_marker Facility2Hangar4 
+0A41: destroy_entrance_marker Hangar4Facility2 
+0A41: destroy_entrance_marker Hangar5Facility1 
+0A41: destroy_entrance_marker Hangar5Hangar3 
+0051: return
+
+:ESCAPE_REMOVE_OBJECTS
+0108: destroy_object 500@ 
+0108: destroy_object 501@ 
+0108: destroy_object 502@ 
+0108: destroy_object 503@ 
+0108: destroy_object 504@ 
+0108: destroy_object 505@ 
+0108: destroy_object 506@ 
+0108: destroy_object 507@ 
+0108: destroy_object 508@ 
+0108: destroy_object 509@ 
+0108: destroy_object 510@ 
+0108: destroy_object 511@ 
+0108: destroy_object 512@ 
+0108: destroy_object 513@ 
+0108: destroy_object 514@ 
+0108: destroy_object 515@ 
+0108: destroy_object 516@ 
+0108: destroy_object 517@ 
+0108: destroy_object 518@ 
+0108: destroy_object 519@ 
+0108: destroy_object 520@ 
+0108: destroy_object 521@ 
+0108: destroy_object 522@ 
+0108: destroy_object 523@ 
+0108: destroy_object 524@ 
+0108: destroy_object 525@ 
+0108: destroy_object 526@ 
+0108: destroy_object 527@ 
+0108: destroy_object 528@ 
+0108: destroy_object 529@ 
+0108: destroy_object 530@ 
+0108: destroy_object 531@ 
+0108: destroy_object 532@ 
+0108: destroy_object 533@ 
+0108: destroy_object 534@ 
+0108: destroy_object 535@ 
+0108: destroy_object 536@ 
+0108: destroy_object 537@ 
+0108: destroy_object 538@ 
+0108: destroy_object 539@ 
+0108: destroy_object 540@ 
+0108: destroy_object 541@ 
+0108: destroy_object 542@ 
+0108: destroy_object 543@ 
+0108: destroy_object 544@ 
+0108: destroy_object 545@ 
+0108: destroy_object 546@ 
+0108: destroy_object 547@ 
+0108: destroy_object 548@ 
+0108: destroy_object 549@ 
+0108: destroy_object 550@ 
+0108: destroy_object 551@ 
+0108: destroy_object 552@ 
+0108: destroy_object 553@ 
+0108: destroy_object 554@ 
+0108: destroy_object 555@ 
+0108: destroy_object 556@ 
+0108: destroy_object 557@ 
+0108: destroy_object 558@ 
+0108: destroy_object 559@ 
+0108: destroy_object 560@ 
+0108: destroy_object 561@ 
+0108: destroy_object 562@ 
+0108: destroy_object 563@ 
+0108: destroy_object 564@ 
+0108: destroy_object 565@ 
+0108: destroy_object 566@ 
+0108: destroy_object 567@ 
+0108: destroy_object 568@ 
+0108: destroy_object 569@ 
+0108: destroy_object 570@ 
+0108: destroy_object 571@ 
+0108: destroy_object 572@ 
+0108: destroy_object 573@ 
+0108: destroy_object 574@ 
+0108: destroy_object 575@ 
+0108: destroy_object 576@ 
+0108: destroy_object 577@ 
+0108: destroy_object 578@ 
+0108: destroy_object 579@ 
+0108: destroy_object 580@ 
+0108: destroy_object 581@ 
+0108: destroy_object 582@ 
+0108: destroy_object 583@ 
+0108: destroy_object 584@ 
+0108: destroy_object 585@ 
+0108: destroy_object 586@ 
+0108: destroy_object 587@ 
+0108: destroy_object 588@ 
+0108: destroy_object 589@ 
+0108: destroy_object 590@ 
+0108: destroy_object 591@ 
+0108: destroy_object 592@ 
+0108: destroy_object 593@ 
+0108: destroy_object 594@ 
+0108: destroy_object 595@ 
+0108: destroy_object 596@ 
+0108: destroy_object 597@ 
+0108: destroy_object 598@ 
+0108: destroy_object 599@ 
+0108: destroy_object 600@ 
+0108: destroy_object 601@ 
+0108: destroy_object 602@ 
+0108: destroy_object 603@ 
+0108: destroy_object 604@ 
+0108: destroy_object 605@ 
+0108: destroy_object 606@ 
+0108: destroy_object 607@ 
+0108: destroy_object 608@ 
+0108: destroy_object 609@ 
+0108: destroy_object 610@ 
+0108: destroy_object 611@ 
+0108: destroy_object 612@ 
+0108: destroy_object 613@ 
+0108: destroy_object 614@ 
+0108: destroy_object 615@ 
+0108: destroy_object 616@ 
+0108: destroy_object 617@ 
+0108: destroy_object 618@ 
+0108: destroy_object 619@ 
+0108: destroy_object 620@ 
+0108: destroy_object 621@ 
+0108: destroy_object 622@ 
+0108: destroy_object 623@ 
+0108: destroy_object 624@ 
+0108: destroy_object 625@ 
+0108: destroy_object 626@ 
+0108: destroy_object 627@ 
+0108: destroy_object 628@ 
+0051: return            
+
+:ESCAPE_SPAWN_OBJECTS_FACILITY
+029B: 200@ = init_object #missile_02_SFXR at 265.111 1882.05 -30.7984
+0453: set_object 200@ XY_rotation 0.0 0.0 angle 270.0
+029B: 500@ = init_object #a51_blastdoorR at 211.873 1875.36 13.8845
+0453: set_object 500@ XY_rotation 0.0 0.0 angle 0.0
+029B: 501@ = init_object #a51_blastdoorL at 215.973 1875.36 13.8845
+0453: set_object 501@ XY_rotation 0.0 0.0 angle 0.0
+029B: 502@ = init_object #a51_labdoor at 249.004 1841.85 7.7315
+0453: set_object 502@ XY_rotation 0.0 0.0 angle 0.0
+{029B: 201@ = init_object #a51_labdoor at 256.204 1835.65 3.6315
+0453: set_object 201@ XY_rotation 0.0 0.0 angle 270.0}
+029B: 503@ = init_object #a51_labdoor at 239.404 1862.55 13.0315
+0453: set_object 503@ XY_rotation 0.0 0.0 angle 0.0
+029B: 504@ = init_object #a51_srack1_ at 248.712 1858.18 12.6974
+0453: set_object 504@ XY_rotation 0.0 0.0 angle 0.0
+029B: 505@ = init_object #a51_srack3_ at 248.712 1859.78 12.6974
+0453: set_object 505@ XY_rotation 0.0 0.0 angle 0.0
+029B: 506@ = init_object #a51_srack4_ at 242.87 1863.96 10.3609
+0453: set_object 506@ XY_rotation 0.0 0.0 angle 270.0
+if 8038: not $MISSION_DIFFICULTY == 1 // Special Agent or Perfect Agent
+then
+    029B: 507@ = init_object #a51_labdoor at 277.47 1821.58 6.7281
+    0453: set_object 507@ XY_rotation 0.0 0.0 angle 0.0
+    029B: 508@ = init_object #a51_labdoor at 297.77 1821.58 6.7281
+    0453: set_object 508@ XY_rotation 0.0 0.0 angle 0.0
+end
+029B: 509@ = init_object #wongs_gate at 274.07 1816.43 6.9031
+0453: set_object 509@ XY_rotation 0.0 0.0 angle 90.0
+0051: return
+
+:ESCAPE_SPAWN_OBJECTS_HANGAR1
+029B: 510@ = init_object #a51_intdoor at -356.477 1600.32 76.4912
+0453: set_object 510@ XY_rotation 0.0 0.0 angle 270.0
+029B: 511@ = init_object #gate_autoR at -359.285 1607.92 76.8874
+0453: set_object 511@ XY_rotation 180.0 180.0 angle 312.0
+029B: 512@ = init_object #gate_autoR at -364.485 1613.72 76.5874
+0453: set_object 512@ XY_rotation 180.0 180.0 angle 312.0
+029B: 513@ = init_object #gate_autoR at -401.785 1516.52 76.0874
+0453: set_object 513@ XY_rotation 0.0 0.0 angle 114.0 //66.0
+029B: 514@ = init_object #gate_autoR at -369.885 1613.82 76.0874
+0453: set_object 514@ XY_rotation 180.0 180.0 angle 45.6002
+029B: 515@ = init_object #gate_autoR at -375.285 1608.22 76.0874
+0453: set_object 515@ XY_rotation 180.0 180.0 angle 45.6002
+029B: 516@ = init_object #gate_autoR at -380.785 1602.62 76.1874
+0453: set_object 516@ XY_rotation 180.0 180.0 angle 45.6002
+029B: 517@ = init_object #gate_autoR at -386.285 1597.02 76.0874
+0453: set_object 517@ XY_rotation 180.0 180.0 angle 45.6002
+029B: 518@ = init_object #gate_autoR at -391.785 1591.42 75.5874
+0453: set_object 518@ XY_rotation 180.0 180.0 angle 45.6002
+029B: 519@ = init_object #gate_autoR at -395.885 1584.92 75.2874
+0453: set_object 519@ XY_rotation 180.0 180.0 angle 70.0
+029B: 520@ = init_object #gate_autoR at -398.585 1577.62 74.9874
+0453: set_object 520@ XY_rotation 180.0 180.0 angle 70.0
+029B: 521@ = init_object #gate_autoR at -401.285 1570.22 74.7874
+0453: set_object 521@ XY_rotation 180.0 180.0 angle 70.0
+029B: 522@ = init_object #gate_autoR at -403.985 1562.82 74.7874
+0453: set_object 522@ XY_rotation 180.0 180.0 angle 70.0
+029B: 523@ = init_object #gate_autoR at -405.285 1555.22 74.8874
+0453: set_object 523@ XY_rotation 0.0 0.0 angle 270.0
+029B: 524@ = init_object #gate_autoR at -405.285 1547.42 74.8874
+0453: set_object 524@ XY_rotation 0.0 0.0 angle 270.0
+029B: 525@ = init_object #gate_autoR at -405.285 1539.52 75.7874
+0453: set_object 525@ XY_rotation 0.0 0.0 angle 270.0
+029B: 526@ = init_object #gate_autoR at -405.285 1531.62 75.7874
+0453: set_object 526@ XY_rotation 0.0 0.0 angle 270.0
+029B: 527@ = init_object #gate_autoR at -404.385 1523.92 75.9874
+0453: set_object 527@ XY_rotation 0.0 0.0 angle 104.0 //76.0
+029B: 528@ = init_object #gate_autoR at -312.516 1559.65 76.2569
+0453: set_object 528@ XY_rotation 180.0 180.0 angle 310.6
+029B: 529@ = init_object #gate_autoR at -333.816 1582.45 76.4569
+0453: set_object 529@ XY_rotation 180.0 180.0 angle 317.0
+029B: 530@ = init_object #gate_autoR at -328.116 1577.15 76.2569
+0453: set_object 530@ XY_rotation 180.0 180.0 angle 317.0
+029B: 531@ = init_object #gate_autoR at -322.716 1571.45 76.2569
+0453: set_object 531@ XY_rotation 180.0 180.0 angle 310.6
+029B: 532@ = init_object #gate_autoR at -317.616 1565.55 76.2569
+0453: set_object 532@ XY_rotation 180.0 180.0 angle 310.6
+029B: 533@ = init_object #gate_autoR at -349.218 1553.03 76.2999
+0453: set_object 533@ XY_rotation 0.0 0.0 angle 124.0 //56.0
+029B: 534@ = init_object #gate_autoR at -332.118 1575.53 76.2999
+0453: set_object 534@ XY_rotation 180.0 180.0 angle 45.2002
+029B: 535@ = init_object #gate_autoR at -337.618 1570.03 76.2999
+0453: set_object 535@ XY_rotation 180.0 180.0 angle 45.2002
+029B: 536@ = init_object #gate_autoR at -343.118 1564.53 76.2999
+0453: set_object 536@ XY_rotation 180.0 180.0 angle 45.2002
+029B: 537@ = init_object #gate_autoR at -348.618 1559.03 76.2999
+0453: set_object 537@ XY_rotation 180.0 180.0 angle 45.2002
+029B: 538@ = init_object #a51_intdoor at -352.243 1605.08 76.1136
+0453: set_object 538@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+
+:ESCAPE_SPAWN_OBJECTS_HANGAR2
+029B: 539@ = init_object #DYN_SCAFFOLD_3b at 1383.09 -48.0021 1000.92
+0453: set_object 539@ XY_rotation 0.0 0.0 angle 270.0
+029B: 540@ = init_object #DYN_SCAFFOLD_4b at 1380.99 -48.0021 1000.42
+0453: set_object 540@ XY_rotation 0.0 0.0 angle 270.0
+029B: 541@ = init_object #CJ_SKIP_Rubbish at 1381.08 2.0492 1001.12
+0453: set_object 541@ XY_rotation 0.0 0.0 angle 270.0
+029B: 542@ = init_object #portakabin at 1372.44 -0.5988 1001.42
+0453: set_object 542@ XY_rotation 0.0 0.0 angle 353.0
+029B: 543@ = init_object #blockpallet at 1412.62 -3.3838 1000.63
+0453: set_object 543@ XY_rotation 0.0 0.0 angle 2.0
+029B: 544@ = init_object #blockpallet at 1412.52 -3.3838 1002.13
+0453: set_object 544@ XY_rotation 0.0 0.0 angle 359.0
+029B: 545@ = init_object #gen_roofbit2 at 1386.09 -12.5875 1000.89
+0453: set_object 545@ XY_rotation 0.0 0.0 angle 79.0
+029B: 546@ = init_object #immmcran at 1365.9 -1.6551 999.92
+0453: set_object 546@ XY_rotation 0.0 0.0 angle 0.0
+029B: 547@ = init_object #DYN_BOX_PILE at 1358.56 -22.3661 1000.49
+0453: set_object 547@ XY_rotation 0.0 0.0 angle 270.0
+029B: 548@ = init_object #DYN_BOX_PILE at 1359.36 -23.2661 1000.49
+0453: set_object 548@ XY_rotation 180.0 180.0 angle 79.0
+029B: 549@ = init_object #smash_box_brk at 1358.95 -47.6947 999.89
+0453: set_object 549@ XY_rotation 0.0 0.0 angle 0.0
+029B: 550@ = init_object #imy_bbox at 1405.89 -7.7719 1002.91
+0453: set_object 550@ XY_rotation 0.0 0.0 angle 0.0
+029B: 551@ = init_object #imy_bbox at 1405.89 -7.7719 1000.51
+0453: set_object 551@ XY_rotation 0.0 0.0 angle 0.0
+029B: 552@ = init_object #imy_bbox at 1405.89 -7.7719 1001.71
+0453: set_object 552@ XY_rotation 0.0 0.0 angle 0.0
+029B: 553@ = init_object #imy_bbox at 1405.89 -18.4874 1002.91
+0453: set_object 553@ XY_rotation 0.0 0.0 angle 0.0
+029B: 554@ = init_object #imy_bbox at 1405.89 -36.1648 1002.91
+0453: set_object 554@ XY_rotation 0.0 0.0 angle 0.0
+029B: 555@ = init_object #imy_bbox at 1405.89 -18.4874 1001.71
+0453: set_object 555@ XY_rotation 0.0 0.0 angle 0.0
+029B: 556@ = init_object #imy_bbox at 1405.89 -18.4874 1000.51
+0453: set_object 556@ XY_rotation 0.0 0.0 angle 0.0
+029B: 557@ = init_object #imy_bbox at 1374.11 -7.0389 1002.91
+0453: set_object 557@ XY_rotation 0.0 0.0 angle 0.0
+029B: 558@ = init_object #imy_bbox at 1405.89 -27.5219 1002.91
+0453: set_object 558@ XY_rotation 0.0 0.0 angle 0.0
+029B: 559@ = init_object #imy_bbox at 1373.97 -35.6595 1002.91
+0453: set_object 559@ XY_rotation 0.0 0.0 angle 0.0
+029B: 560@ = init_object #imy_bbox at 1391.36 -5.4153 1002.91
+0453: set_object 560@ XY_rotation 0.0 0.0 angle 0.0
+029B: 561@ = init_object #imy_bbox at 1391.53 -18.6175 1002.91
+0453: set_object 561@ XY_rotation 0.0 0.0 angle 0.0
+029B: 562@ = init_object #imy_bbox at 1391.32 -26.9375 1002.91
+0453: set_object 562@ XY_rotation 0.0 0.0 angle 0.0
+029B: 563@ = init_object #imy_bbox at 1391.49 -35.1322 1002.91
+0453: set_object 563@ XY_rotation 0.0 0.0 angle 0.0
+029B: 564@ = init_object #imy_bbox at 1391.36 -5.4153 1000.51
+0453: set_object 564@ XY_rotation 0.0 0.0 angle 0.0
+029B: 565@ = init_object #imy_bbox at 1391.36 -5.4153 1001.71
+0453: set_object 565@ XY_rotation 0.0 0.0 angle 0.0
+029B: 566@ = init_object #imy_bbox at 1374.11 -7.0389 1000.51
+0453: set_object 566@ XY_rotation 0.0 0.0 angle 0.0
+029B: 567@ = init_object #imy_bbox at 1374.11 -7.0389 1001.71
+0453: set_object 567@ XY_rotation 0.0 0.0 angle 0.0
+029B: 568@ = init_object #imy_bbox at 1374.48 -18.0941 1000.51
+0453: set_object 568@ XY_rotation 0.0 0.0 angle 0.0
+029B: 569@ = init_object #imy_bbox at 1374.48 -18.0941 1001.71
+0453: set_object 569@ XY_rotation 0.0 0.0 angle 0.0
+029B: 570@ = init_object #imy_bbox at 1391.53 -18.6175 1000.51
+0453: set_object 570@ XY_rotation 0.0 0.0 angle 0.0
+029B: 571@ = init_object #imy_bbox at 1391.53 -18.6175 1001.71
+0453: set_object 571@ XY_rotation 0.0 0.0 angle 0.0
+029B: 572@ = init_object #imy_bbox at 1405.89 -27.5219 1000.51
+0453: set_object 572@ XY_rotation 0.0 0.0 angle 0.0
+029B: 573@ = init_object #imy_bbox at 1405.89 -27.5219 1001.71
+0453: set_object 573@ XY_rotation 0.0 0.0 angle 0.0
+029B: 574@ = init_object #imy_bbox at 1405.89 -36.1648 1000.51
+0453: set_object 574@ XY_rotation 0.0 0.0 angle 0.0
+029B: 575@ = init_object #imy_bbox at 1405.89 -36.1648 1001.71
+0453: set_object 575@ XY_rotation 0.0 0.0 angle 0.0
+029B: 576@ = init_object #imy_bbox at 1391.32 -26.9375 1000.51
+0453: set_object 576@ XY_rotation 0.0 0.0 angle 0.0
+029B: 577@ = init_object #imy_bbox at 1391.32 -26.9375 1001.71
+0453: set_object 577@ XY_rotation 0.0 0.0 angle 0.0
+029B: 578@ = init_object #imy_bbox at 1391.49 -35.1322 1000.51
+0453: set_object 578@ XY_rotation 0.0 0.0 angle 0.0
+029B: 579@ = init_object #imy_bbox at 1391.49 -35.1322 1001.71
+0453: set_object 579@ XY_rotation 0.0 0.0 angle 0.0
+029B: 580@ = init_object #imy_bbox at 1373.97 -35.6595 1000.51
+0453: set_object 580@ XY_rotation 0.0 0.0 angle 0.0
+029B: 581@ = init_object #imy_bbox at 1373.97 -35.6595 1001.71
+0453: set_object 581@ XY_rotation 0.0 0.0 angle 0.0
+029B: 582@ = init_object #imy_track_barrier at 1417.42 -46.8159 1007.49
+0453: set_object 582@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+
+:ESCAPE_SPAWN_OBJECTS_HANGAR3
+029B: 583@ = init_object #a51_gatecontrol at 1287.64 -36.8334 1003.89
+0453: set_object 583@ XY_rotation 0.0 0.0 angle 270.0
+029B: 584@ = init_object #a51_gatecon_a at 1286.71 -36.8933 1002.14
+0453: set_object 584@ XY_rotation 0.0 0.0 angle 270.0
+029B: 585@ = init_object #des_a51warheads at 1296.93 1.80909 1001.6
+0453: set_object 585@ XY_rotation 0.0 0.0 angle 0.0
+029B: 586@ = init_object #des_a51warheads at 1266.93 -8.19091 1001.6
+0453: set_object 586@ XY_rotation 0.0 0.0 angle 270.0
+029B: 587@ = init_object #sw_Silo04 at 1300.2 -20.6426 1011.18
+0453: set_object 587@ XY_rotation 0.0 0.0 angle 0.0
+029B: 588@ = init_object #des_a51warheads at 1259.33 -38.3909 1001.6
+0453: set_object 588@ XY_rotation 0.0 0.0 angle 0.0
+029B: 589@ = init_object #des_a51warheads at 1269.43 -48.4909 1008.8
+0453: set_object 589@ XY_rotation 0.0 0.0 angle 0.0
+029B: 626@ = init_object #a51_intdoor at 1248.18 -57.6942 1008.48
+0453: set_object 626@ XY_rotation 0.0 0.0 angle 270.0
+0051: return
+
+:ESCAPE_SPAWN_OBJECTS_HANGAR4
+029B: 590@ = init_object #a51_ventsouth at 1263.2 -2.6124 1008.33
+0453: set_object 590@ XY_rotation 0.0 0.0 angle 270.0
+029B: 591@ = init_object #a51_ventsouth at 1263.2 -18.3124 1008.33
+0453: set_object 591@ XY_rotation 0.0 0.0 angle 270.0
+029B: 592@ = init_object #a51_ventsouth at 1263.2 -23.2124 1008.33
+0453: set_object 592@ XY_rotation 0.0 0.0 angle 270.0
+029B: 593@ = init_object #a51_plat at 1264.69 -1.287 1000.65//1000.65 // 1009.15
+0453: set_object 593@ XY_rotation 0.0 0.0 angle 270.0
+029B: 594@ = init_object #imy_bbox at 1297.63 -36.0115 1001.83
+0453: set_object 594@ XY_rotation 0.0 0.0 angle 2.2
+029B: 595@ = init_object #imy_bbox at 1297.63 -35.9115 1000.53
+0453: set_object 595@ XY_rotation 0.0 0.0 angle 0.0
+029B: 596@ = init_object #imy_bbox at 1297.63 -35.9115 1003.03
+0453: set_object 596@ XY_rotation 0.0 0.0 angle 356.0
+029B: 597@ = init_object #imy_bbox at 1279.33 -35.9115 1000.53
+0453: set_object 597@ XY_rotation 0.0 0.0 angle 356.0
+029B: 598@ = init_object #imy_bbox at 1279.33 -35.9115 1001.73
+0453: set_object 598@ XY_rotation 0.0 0.0 angle 2.0
+029B: 599@ = init_object #imy_bbox at 1279.33 -35.9115 1002.93
+0453: set_object 599@ XY_rotation 0.0 0.0 angle 0.0
+029B: 600@ = init_object #imy_bbox at 1260.33 -35.9115 1000.53
+0453: set_object 600@ XY_rotation 0.0 0.0 angle 0.0
+029B: 601@ = init_object #imy_bbox at 1260.23 -35.8115 1001.73
+0453: set_object 601@ XY_rotation 0.0 0.0 angle 3.0
+029B: 602@ = init_object #imy_bbox at 1260.23 -36.0115 1002.93
+0453: set_object 602@ XY_rotation 0.0 0.0 angle 358.0
+029B: 603@ = init_object #imy_bbox at 1297.11 -23.042 1000.53
+0453: set_object 603@ XY_rotation 0.0 0.0 angle 358.0
+029B: 604@ = init_object #imy_bbox at 1297.11 -23.242 1001.73
+0453: set_object 604@ XY_rotation 0.0 0.0 angle 3.0
+029B: 605@ = init_object #imy_bbox at 1297.11 -23.242 1002.93
+0453: set_object 605@ XY_rotation 0.0 0.0 angle 357.0
+029B: 606@ = init_object #imy_bbox at 1278.81 -23.042 1000.53
+0453: set_object 606@ XY_rotation 0.0 0.0 angle 357.0
+029B: 607@ = init_object #imy_bbox at 1278.81 -22.942 1001.73
+0453: set_object 607@ XY_rotation 0.0 0.0 angle 0.0
+029B: 608@ = init_object #imy_bbox at 1278.81 -22.942 1002.93
+0453: set_object 608@ XY_rotation 0.0 0.0 angle 354.0
+029B: 609@ = init_object #imy_bbox at 1278.81 -22.942 1004.13
+0453: set_object 609@ XY_rotation 0.0 0.0 angle 0.0
+029B: 610@ = init_object #imy_bbox at 1260.51 -22.942 1000.53
+0453: set_object 610@ XY_rotation 0.0 0.0 angle 0.0
+029B: 611@ = init_object #imy_bbox at 1260.51 -22.942 1001.73
+0453: set_object 611@ XY_rotation 0.0 0.0 angle 356.0
+029B: 612@ = init_object #imy_bbox at 1260.61 -22.842 1002.93
+0453: set_object 612@ XY_rotation 0.0 0.0 angle 356.0
+029B: 613@ = init_object #imy_bbox at 1297.51 -4.442 1000.53
+0453: set_object 613@ XY_rotation 0.0 0.0 angle 356.0
+029B: 614@ = init_object #imy_bbox at 1297.51 -4.442 1001.73
+0453: set_object 614@ XY_rotation 0.0 0.0 angle 0.0
+029B: 615@ = init_object #imy_bbox at 1297.51 -4.442 1002.93
+0453: set_object 615@ XY_rotation 0.0 0.0 angle 0.0
+029B: 616@ = init_object #imy_bbox at 1278.91 -4.442 1000.53
+0453: set_object 616@ XY_rotation 0.0 0.0 angle 358.0
+029B: 617@ = init_object #imy_bbox at 1278.91 -4.442 1001.73
+0453: set_object 617@ XY_rotation 0.0 0.0 angle 4.0
+029B: 618@ = init_object #imy_bbox at 1278.91 -4.442 1002.93
+0453: set_object 618@ XY_rotation 0.0 0.0 angle 0.0
+029B: 619@ = init_object #imy_bbox at 1260.51 -4.442 1000.53
+0453: set_object 619@ XY_rotation 0.0 0.0 angle 356.0
+029B: 620@ = init_object #imy_bbox at 1260.51 -4.442 1001.73
+0453: set_object 620@ XY_rotation 0.0 0.0 angle 3.0
+029B: 621@ = init_object #imy_bbox at 1260.71 -4.442 1002.93
+0453: set_object 621@ XY_rotation 0.0 0.0 angle 0.0
+029B: 622@ = init_object #OTB_machine at 1249.97 7.02211 1007.96
+0453: set_object 622@ XY_rotation 0.0 0.0 angle 90.0
+029B: 623@ = init_object #Dr_GsNEW02 at 1281.89 6.47886 999.859
+0453: set_object 623@ XY_rotation 0.0 0.0 angle 0.0
+029B: 624@ = init_object #k_smashboxes at 1307.61 -22.6424 999.897
+0453: set_object 624@ XY_rotation 0.0 0.0 angle 0.0
+029B: 625@ = init_object #k_smashboxes at 1297.67 4.4901 999.897
+0453: set_object 625@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+
+:ESCAPE_SPAWN_OBJECTS_HANGAR5
+029B: 627@ = init_object #ab_sfAmmuMain at 1268.32 -31.7855 1017.08
+0453: set_object 627@ XY_rotation 0.0 0.0 angle 0.0
+029B: 628@ = init_object #a51_labtable1_ at 1251.79 -32.1929 1014.88
+0453: set_object 628@ XY_rotation 0.0 0.0 angle 0.0
+0051: return
+{=================================================================
+OTHER TASKS
+==================================================================}
+:M4_3_OTHER_TASKS
+if
+0038: $OTHER_TASKS_STATUS == 0
+then
+end
+0051: return    
+
+{=================================================================
+OBJECTIVE 1 - Locate alien tech medpack
+==================================================================}
+:M4_3_OBJECTIVE1
+if and
+0038: $AREA_STATUS == 0 // Facility
+0038: $OBJ1_STATUS == 0
+then
+    0213: 210@ = create_pickup #briefcase type 3 at 213.661 1823.0585 6.4141
+    03DC: 310@ = create_marker_above_pickup 210@
+    0165: set_marker 310@ color_to 0 // Red
+    $OBJ1_STATUS=1
+end
+
+if and
+8038: not $AREA_STATUS == 0 // Not in Facility
+0038: $OBJ1_STATUS == 1
+then
+    0164: disable_marker 310@
+    0215: destroy_pickup 210@
+    $OBJ1_STATUS=0
+end
+
+if
+0038: $OBJ1_STATUS == 1
+then
+    if 0214:   pickup 210@ picked_up
+    then
+        0164: disable_marker 310@
+        00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2         //Objective 1: Completed
+        $MOBJ1=1
+        00BC: show_text_highpriority GXT 'M42_017' time 4000 flag 1  // Alien Medpack picked up.
+        $OBJ1_STATUS=2
+    end
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 2 - Rendezvous with CI spy
+==================================================================}
+:M4_3_OBJECTIVE2
+if
+0038: $OBJ2_STATUS == 0
+then
+    if and
+    8038: not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    0038: $AREA_STATUS == 0 // Facility
+    then $OBJ2_STATUS=1
+    end
+    if and
+    0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    0038: $AREA_STATUS == 5 // Hangar 4
+    then $OBJ2_STATUS=1
+    end
+end
+
+if
+0038: $OBJ2_STATUS == 1
+then
+    0247: load_model #swmyri // Johnathan
+    0247: load_model #desert_eagle
+    038B: load_requested_models 
+    repeat
+    wait 0 ms
+    until 0248:   model #swmyri available and 0248:   model #desert_eagle available
+    if 0038: $MISSION_DIFFICULTY == 1 // Agent
+    then 009A: 20@ = create_actor_pedtype 4 model #swmyri at 255.2591 1801.9974 7.4667
+        0173: set_actor 20@ Z_angle_to 90.0
+    end
+    if 0038: $MISSION_DIFFICULTY == 2 // Special Agent
+    then 009A: 20@ = create_actor_pedtype 4 model #swmyri at 213.661 1823.0585 6.4141
+        0173: set_actor 20@ Z_angle_to 270.0
+    end
+    if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    then 009A: 20@ = create_actor_pedtype 4 model #swmyri at 1307.0983 -66.0594 1002.4922
+        0173: set_actor 20@ Z_angle_to 90.0
+    end
+    0187: 320@ = create_marker_above_actor 20@ 
+    07E0: set_marker 320@ type_to 1  //0: red / 1: blue
+    0249: release_model #swmyri
+    0249: release_model #desert_eagle
+    060B: set_actor 20@ decision_maker_to 400@
+    077A: set_actor 20@ acquaintance 1 to_actors_pedtype 0 // Respect
+    01B2: give_actor 20@ weapon 24 ammo 100
+    01B9: set_actor 20@ armed_weapon_to 0
+    $OBJ2_STATUS=2
+end
+
+if
+0038: $OBJ2_STATUS == 2
+then
+    if and
+    8038: not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    8038: not $AREA_STATUS == 0 // Not in Facility
+    then $OBJ2_STATUS=3
+    end
+    if and
+    0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    8038: not $AREA_STATUS == 5 // Not in Hangar 4
+    then $OBJ2_STATUS=3
+    end
+    
+    if
+    09ED:   actor $PLAYER_ACTOR is_within_field_of_view_actor 20@
+    00F2:   actor $PLAYER_ACTOR near_actor 20@ radius 20.0 20.0 20.0
+    then
+        //05BF: AS_actor 20@ look_at_actor $PLAYER_ACTOR 30000 ms 
+        074D: AS_actor 20@ turns_to_and_look_at_actor $PLAYER_ACTOR timelimit -1
+        00BC: show_text_highpriority GXT 'M42_017' time 4000 flag 1  // (Jonnathan) Johanna, over here.
+        $OBJ2_STATUS=4
+        32@=0
+    end
+end
+
+if
+0038: $OBJ2_STATUS == 3
+then
+    0164: disable_marker 320@
+    009B: destroy_actor 20@ 
+    $OBJ2_STATUS=0
+end
+
+if
+0038: $OBJ2_STATUS == 4
+then
+    if and
+    0029:   32@ >= 4000
+    00F2:   actor $PLAYER_ACTOR near_actor 20@ radius 2.0 2.0 2.0
+    then
+        01B9: set_actor 20@ armed_weapon_to 24
+        0164: disable_marker 320@
+        if 8038: not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+        then 00BA: show_text_styled GXT 'MOBJ1' time 2000 style 2         //Objective 1: Completed
+            $MOBJ1=1
+        else    // Perfect Agent
+            00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2         //Objective 2: Completed
+            $MOBJ2=1
+        end
+        00BC: show_text_highpriority GXT 'M42_017' time 4000 flag 1  // (Jonnathan) We need to get back to our friend.
+        0850: AS_actor 20@ follow_actor $PLAYER_ACTOR
+        $OBJ2_STATUS=5
+    end
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 3 - Locate secret hangar
+==================================================================}
+:M4_3_OBJECTIVE3
+if and
+0038: $AREA_STATUS == 4 // Hangar 3
+0038:   $OBJ3_STATUS == 0
+then
+    if 0038: $MISSION_DIFFICULTY == 3 // Perfect Agent
+    then
+        03BC: 330@ = create_sphere_at 1289.774 -36.803 1005.0151 radius 1.0
+        018A: 331@ = create_checkpoint_at 1289.774 -36.803 1005.0151
+        0165: set_marker 331@ color_to 0 // Red
+        if 8038: $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+        then
+            029B: 202@ = init_object #imcompstrs02 at 1294.97 -53.2923 1004.18 // 998.38
+            0453: set_object 202@ XY_rotation 0.0 0.0 angle 45.0
+        else // Perfect Agent
+            029B: 202@ = init_object #imcompstrs02 at 1294.97 -53.2923 998.38 //1004.18
+            0453: set_object 202@ XY_rotation 0.0 0.0 angle 45.0
+        end
+        $OBJ3_STATUS=1
+    else $OBJ3_STATUS=3
+    end
+end
+
+if and
+8038: not $AREA_STATUS == 4 // Hangar 3
+0038:   $OBJ3_STATUS == 1
+then
+    03BD: destroy_sphere 330@
+    0164: disable_marker 331@
+    0108: destroy_object 202@
+    $OBJ3_STATUS=0
+end
+
+if 0038:   $OBJ3_STATUS == 1
+then
+    if 00FE:   actor $PLAYER_ACTOR sphere 0 in_sphere 1289.774 -36.803 1005.0151 radius 1.0 1.0 1.0
+    then
+        if 00E1:   player 0 pressed_key 15 // Enter
+        then
+            03E6: remove_text_box
+            0687: clear_actor $PLAYER_ACTOR task
+            04ED: load_animation "crib" 
+            repeat
+            wait 0 ms
+            until 04EE: animation "crib" loaded
+            0605: actor $PLAYER_ACTOR perform_animation_sequence "CRIB_Use_Switch" IFP_file "crib" 10.0 loop 0 0 0 0 time -1
+            04EF: release_animation "crib"
+            0173: set_actor $PLAYER_ACTOR Z_angle_to 270.0
+            0164: disable_marker 331@
+            03BD: destroy_sphere 330@
+            132@=998.38
+            $OBJ3_STATUS=2
+        else
+            if and
+            0029:   33@ >= 10000
+            88FE: not text_box_displayed
+            then
+            03E5: show_text_box 'M42_030' // Press ~r~~k~~VEHICLE_ENTER_EXIT~~w~ to activate ~r~Bridge~w~.
+            33@=0
+            end
+        end
+    end
+end
+
+if 0038:   $OBJ3_STATUS == 2
+then
+    if 8038: not 132@ == 1004.18
+    then
+        034E: move_object 202@ to 1294.97 -53.2923 1004.18 speed 0.0 0.0 0.2 flag 0
+        01BB: store_object 202@ position_to 130@ 131@ 132@
+    else $OBJ3_STATUS=3
+    end
+end
+
+if 0038:   $OBJ3_STATUS == 3
+then
+    if 8038: not $MISSION_DIFFICULTY == 3 // Agent or Special Agent
+    then 00BA: show_text_styled GXT 'MOBJ2' time 2000 style 2         //Objective 2: Completed
+        $MOBJ2=1
+    else    // Perfect Agent
+        00BA: show_text_styled GXT 'MOBJ3' time 2000 style 2         //Objective 3: Completed
+        $MOBJ3=1
+    end
+    00BC: show_text_highpriority GXT 'M42_017' time 4000 flag 1  // Secret hangar accessed.
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 4 - Revive Maian bodyguard
+==================================================================}
+:M4_3_OBJECTIVE4    
+if
+0038: $OBJ4_STATUS == 0
+then
+end
+0051: return
+
+{=================================================================
+OBJECTIVE 5 - Escape from Area 51
+==================================================================}
+:M4_3_OBJECTIVE5
+if
+0038:   $OBJ5_STATUS == 0
+then
+end
+0051: return
+
+{=================================================================
+CUTSCENES
+==================================================================}
+:ESCAPE_OUTRO
+0051: return
+
+{=================================================================
+LOCAL SUBROUTINES
+==================================================================}
+{=================================================================
+Final routines
+==================================================================}
+//ññññññññññññ-
+:ESCAPE_PASSED
+0394: play_music 1
+$TUT_MISSIONS_PASSED += 1
+Player.Money($PLAYER_CHAR) += 10000
+01E3: show_text_1number_styled GXT 'M_PASS' number 10000 time 5000 style 1 // MISSION PASSED!~n~~w~$~1~
+return
+
+//ññññññññññññ-
+:ESCAPE_FAIL
+00BA: show_text_styled GXT 'M_FAIL' time 5000 style 1 // ~r~MISSION FAILED!
+//0555: remove_weapon 31 from_actor $PLAYER_ACTOR
+return
+
+//ññññññññññññ-
+:ESCAPE_CLEANUP
+$ONMISSION = 0
+{CONDICIONES GENERALES}
+010D: set_player $PLAYER_CHAR wanted_level_to 0
+01F0: set_max_wanted_level_to 6 
+{ACTORES}
+{OBJECTS}
+{MARKERS / CHECKPOINTS}
+//0A41: destroy_entrance_marker BuildingDoor
+08E7: disable_entrance_markers 0
+//0164: disable_marker 304@
+{SPHERES}
+//03BD: destroy_sphere 300@ 
+{DECISIONS}
+065C: release_decision_maker 400@  // Comportamiento limpio para actores especiales
+065C: release_decision_maker $clean  // Variable de ENABLE_CAMSPY
+{VARIABLES GLOBALES}
+$MOBJ1 = 0
+$MOBJ2 = 0
+$MOBJ3 = 0
+$MOBJ4 = 0
+$MOBJ5 = 0
+$OBJ1_STATUS=0
+$OBJ2_STATUS=0
+$OBJ3_STATUS=0
+$OBJ4_STATUS=0
+$OBJ5_STATUS=0
+$OTHER_TASKS_STATUS=0
+$ALLOBJECTIVES=0
+mission_cleanup
+return
+
+
+
+
+
+
+
+//ññññ-External script 0ññññÅE
+// put your external scripts here
