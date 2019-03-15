@@ -1,0 +1,47 @@
+{======================================================================
+======================================================================}
+{$CLEO .s}
+thread 'Test'
+
+$ONMISSION = 1
+00A0: store_actor $PLAYER_ACTOR position_to 0@ 1@ 2@
+2@ += -1.0
+0@ += 2.0
+1@ += 2.0
+
+023C: load_special_actor 'caroll' as 1 // models 290-299
+repeat
+wait 0
+until 023D:   special_actor 1 loaded
+
+009A: 10@ = create_actor_pedtype 4 model #SPECIAL01 at 0@ 1@ 2@
+0AB1: @StoreData 3 label @Actors value 10@ offset 4
+
+0296: unload_special_actor 1
+
+repeat
+wait 0
+    if 0ADC:   test_cheat "END"
+    then
+        {0AB1: @GetData 2 label @Actors offset 4 ret_actor 11@
+        01C2: remove_references_to_actor 11@
+        0AB1: @StoreData 3 label @Actors value 11@ offset 4}
+        0AB1: @RemoveActors 2 label @Actors number_of_actors 5
+        break
+    end
+until false
+
+$ONMISSION = 0
+0ACE: show_formatted_text_box "End"
+0A93: end_custom_thread
+
+{======================================================================
+======================================================================}
+{$I common/common.txt}
+
+{======================================================================
+======================================================================}
+:Actors
+hex
+00000000 00000000 00000000 00000000 00000000
+end

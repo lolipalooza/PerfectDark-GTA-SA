@@ -10,12 +10,16 @@ MTBL_4	Counter-Operative
 
 M_ERR1	The Mission you ~y~selected~w~ is not ready yet...
 M_ERR2	This option is not ~b~suported~w~ yet...
+M_ABR1	~r~MISSION ABORTED
+M_ABR2	~r~You have aborted the mission.
 
 OBJ1	Objective 1:
 OBJ2	Objective 2:
 OBJ3	Objective 3:
 OBJ4	Objective 4:
 OBJ5	Objective 5:
+
+OBJ_X	Objective ~1~:
 
 MJO_1	(Joanna) Received.
 MJO_2	(Joanna) Understood.
@@ -33,38 +37,43 @@ MOBJ3	~w~Objective 3: Completed
 MOBJ4	~w~Objective 4: Completed
 MOBJ5	~w~Objective 5: Completed
 
-CAMSPY1	Picked up your CamSpy.
-MSKIP	You can ~b~skip~w~ the mission intro by pressing ~k~~CONVERSATION_YES~.
-PD		Perfect Dark
-MDRLCK	The door is locked.
-CI		Carrington Institute
-OBTB01	Abort Mission
+OBTB01	Abort Mission (SPACE)
+OBTB02	Abort Mission
+OBTB03	Are you sure you want to abort the mission?
+OBTB04	SPACE: accept / F: cancel
 OBJINC	Incomplete
 OBJCMP	Complete
+
+CAMSPY1	Picked up your CamSpy.
+MSKIP	You can ~b~skip~w~ the mission intro by pressing ~k~~CONVERSATION_YES~.
+MDRLCK	The door is locked.
 T_LEFT	Time Left
 
+PD	Perfect Dark
+CI	Carrington Institute
+
 # Missions List
-M1_1	dataDyne Central: Defection
-M1_2	dataDyne Research: Investigation
-M1_3	dataDyne Central: Extraction
-M2_1	Carrington Villa: Hostage One
-M3_1	Chicago: Stealth
-M3_2	G5 Building: Reconnaissance
-M4_1	Area 51: Infiltration
-M4_2	Area 51: Rescue
-M4_3	Area 51: Escape
-M5_1	Air Base: Espionage
-M5_2	Air Force One: Antiterrorism
-M5_3	Crash Site: Confrontation
-M6_1	Pelagic II: Exploration
-M6_2	Deep Sea: Nullify Threat
-M7_1	Carrington Institute: Defense
-M8_1	Attack Ship: Covert Assault
-M9_1	Skedar Ruins: Battle Shrine
-M_SP1	Mr. Blonde's Revenge
-M_SP2	Maian SOS
-M_SP3	WAR!
-M_SP4	The Duel
+M1-1	dataDyne Central: Defection
+M1-2	dataDyne Research: Investigation
+M1-3	dataDyne Central: Extraction
+M2-1	Carrington Villa: Hostage One
+M3-1	Chicago: Stealth
+M3-2	G5 Building: Reconnaissance
+M4-1	Area 51: Infiltration
+M4-2	Area 51: Rescue
+M4-3	Area 51: Escape
+M5-1	Air Base: Espionage
+M5-2	Air Force One: Antiterrorism
+M5-3	Crash Site: Confrontation
+M6-1	Pelagic II: Exploration
+M6-2	Deep Sea: Nullify Threat
+M7-1	Carrington Institute: Defense
+M8-1	Attack Ship: Covert Assault
+M9-1	Skedar Ruins: Battle Shrine
+MSP1	Mr. Blonde's Revenge
+MSP2	Maian SOS
+MSP3	WAR!
+MSP4	The Duel
 
 # Missions Objectives
 M11OB1	Disable internal security hub
