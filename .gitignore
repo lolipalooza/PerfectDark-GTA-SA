@@ -1,2 +1,4 @@
 release/
 old/
+src/*.s
+src/*.cs
