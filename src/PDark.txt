@@ -11,18 +11,18 @@ thread 'MainTriggerer'
 repeat
 wait 0
     if $ONMISSION == 0
-    then gosub @CIMissionsSniffer
-    end
-    if 0ADC:   test_cheat "PD"
     then
-        03CB: set_rendering_origin_at 1061.0732 1034.993 10.1585
-        04E4: refresh_game_renderer_at 1061.0732 1034.993
-        00A1: put_actor $PLAYER_ACTOR at 1061.0732 1034.993 10.1585
-        0173: set_actor $PLAYER_ACTOR Z_angle_to 145.0
-        0373: set_camera_directly_behind_player
-    end
-    if $ONMISSION == 0
-    then
+        gosub @CIMissionsSniffer
+        
+        if 0ADC:   test_cheat "PD"
+        then
+            03CB: set_rendering_origin_at 1050.1146 1021.1041 11.0
+            04E4: refresh_game_renderer_at 1050.1146 1021.1041
+            00A1: put_actor $PLAYER_ACTOR at 1050.1146 1021.1041 10.0
+            0173: set_actor $PLAYER_ACTOR Z_angle_to 145.0
+            0373: set_camera_directly_behind_player
+        end
+        
         if 0ADC:   test_cheat "TEST"
         then 0A92: create_custom_thread "test.s"
         end
@@ -78,8 +78,8 @@ then
         
         if not 22@ == 1 // Any other option than Solo Missions
         then
-            00BC: show_text_highpriority GXT 'M_ERR2' time 4000 flag 1  // This option is not ~b~suported~w~ yet...
-            wait 4000 ms
+            00BC: show_text_highpriority GXT 'M_ERR2' time 2000 flag 1  // This option is not ~b~suported~w~ yet...
+            wait 2000 ms
             20@ = 0
         else 20@ = 3 // Solo Missions
         end
@@ -120,9 +120,9 @@ then
         if 0AAB:   file_exists 26@v
         then 20@ = 6 // Select Difficulty
         else
-            00BC: show_text_highpriority GXT 'M_ERR1' time 4000 flag 1  // The Mission you ~y~selected~w~ is not ready yet...
+            00BC: show_text_highpriority GXT 'M_ERR1' time 2000 flag 1  // The Mission you ~y~selected~w~ is not ready yet...
             //0AD0: show_formatted_text_lowpriority "Mission selected: %s, file: %s" time 4000 24@s 26@v
-            wait 4000 ms
+            wait 2000 ms
             20@ = 3 // Mission Select
         end
     end

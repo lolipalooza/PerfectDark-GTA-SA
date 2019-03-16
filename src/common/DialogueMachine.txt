@@ -1,0 +1,71 @@
+{======================================================================
+======================================================================}
+:DialogueMachine_StateVar
+hex
+0
+end
+
+:DialogueMachine_WaitTime
+hex
+00000000
+end
+
+{======================================================================
+======================================================================}
+:DialogueMachine_Init
+0AB1: @StoreInt 2 label @DialogueMachine_StateVar value 0
+0AB1: @StoreData 2 label @DialogueMachine_WaitTime value 0
+0AB2: ret 0
+
+{======================================================================
+======================================================================}
+:GetDialogueData // dialogue_id 0@ dialogues_array_label 1@
+0085: 30@ = 0@ // (int)
+0012: 30@ *= 12 // line length
+
+// Dialogue GXT entry
+0AB1: @GetData 2 label 1@ offset 30@ ret_value 10@
+30@ += 4
+0AB1: @GetData 2 label 1@ offset 30@ ret_value 11@
+30@ += 4
+
+// Dialogue time in long string format
+0AB1: @GetData 2 label 1@ offset 30@ ret_value 14@
+30@ += 4
+//0AB1: @GetData 2 label 1@ offset 30@ ret_value 15@
+//30@ += 4
+
+0AD4: 13@ = scan_string 14@v format "%d" 12@ //IF and SET
+0AB2: ret 3 dialogue_gxt 10@ 11@ dialogue_time_ms 12@
+
+{======================================================================
+======================================================================}
+:DialogueMachine // num_dialogues 0@ dialogues_array_label 1@
+0AB1: @GetInt 1 label @DialogueMachine_StateVar ret_stat 10@
+0AB1: @GetData 1 label @DialogueMachine_WaitTime ret 20@
+
+if 10@ == 0    // First state
+then 12@ = 1
+end
+
+0085: 11@ = 0@ // (int)
+000E: 11@ -= 1
+
+if and
+002D:   11@ >= 10@  // (int)       // current dialogue <= mum_dialogues - 1
+0019:   10@ > 0                    //
+002D:   32@ >= 20@  // (int)       // wait time has elapsed
+then 12@ = 1
+end
+
+if 12@ == 1
+then
+    0AB1: @GetDialogueData 2 dialogue_id 10@ dialogues_array_label 1@ ret dialogue_gxt 30@ 31@ dialogue_time_ms 20@
+    00BC: show_text_highpriority GXT 30@s time 20@ flag 1
+    10@ += 1
+    32@=0
+end
+
+0AB1: @StoreInt 2 label @DialogueMachine_StateVar value 10@
+0AB1: @StoreData 2 label @DialogueMachine_WaitTime value 20@
+0AB2: ret 0

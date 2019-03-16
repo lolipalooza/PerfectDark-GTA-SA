@@ -209,13 +209,21 @@ end
 
 {======================================================================
 ======================================================================}
-// Controls for Pause Menu
+// Controls
 const
-    PAD_ANSWER_PHONE     = 4
-    PAD_CONVERSATION_YES = 11
-    PAD_ENTER_VEHICLE    = 15
-    PAD_SPRINT           = 16
+    // On foot controls
+    PAD_ANSWER_PHONE      = 4
+    PAD_PREV_WEP_ZOOM_IN  = 5
+    PAD_NEXT_WEP_ZOOM_OUT = 7
+    PAD_CONVERSATION_YES  = 11
+    PAD_ENTER_VEHICLE     = 15
+    PAD_SPRINT            = 16
     
+    // Vehicle controls
+    PAD_RADIO_STATION_UP   = 8
+    PAD_RADIO_STATION_DOWN = 9
+    
+    // Controls for Pause Menu
     KEYCONTROL_PAUSE_MENU = PAD_ANSWER_PHONE
     KEYCONTROL_ACCEPT     = PAD_SPRINT
     KEYCONTROL_CANCEL     = PAD_ENTER_VEHICLE
@@ -226,7 +234,7 @@ end
 :PauseMenu // mission_name_gxt 0@ 1@ objective1_gxt 2@ 3@ objective2_gxt 4@ 5@ objective3_gxt 6@ 7@ objective4_gxt 8@ 9@ objective5_gxt 10@ 11@ objective_flags 12@ 13@ 14@ 15@ 16@
 if 00E1:   player 0 pressed_key KEYCONTROL_PAUSE_MENU
 then
-    015D: set_gamespeed  0.001 // 0.3 o 1.0 slow motion
+    015D: set_gamespeed  0.0001 // 0.3 o 1.0 slow motion
     01B4: set_player $PLAYER_CHAR can_move 0 
     03F0: enable_text_draw 1
 
@@ -314,13 +322,13 @@ then
             end
         end
             
-            if 80E1:   not player 0 pressed_key KEYCONTROL_PAUSE_MENU
-            then
-                015D: set_gamespeed  1.0 // 0.3 o 1.0 slow motion
-                01B4: set_player $PLAYER_CHAR can_move 1
-                03F0: enable_text_draw 0
-                0AB2: ret 1 abort_flag 0
-            end
+        if 80E1:   not player 0 pressed_key KEYCONTROL_PAUSE_MENU
+        then
+            015D: set_gamespeed  1.0 // 0.3 o 1.0 slow motion
+            01B4: set_player $PLAYER_CHAR can_move 1
+            03F0: enable_text_draw 0
+            break
+        end
     until false
 end
 0AB2: ret 1 abort_flag 0
@@ -356,3 +364,62 @@ else 033E: set_draw_text_position 2@ 3@ GXT 6@s
 end
 0AB2: ret 0
 
+{======================================================================
+======================================================================}
+:ForceRadioOff // entries: none
+if 00DF:   actor $PLAYER_ACTOR driving
+then
+    051E: 12@ = get_current_radio_station
+    000E: 12@ -= 1
+    
+    if not 12@ == 11 // Radio off
+    then 041E: set_radio_station 11 // force radio off
+    end
+    
+    if 00E1:   player 0 pressed_key PAD_RADIO_STATION_UP
+    then
+        041E: set_radio_station 11 // force radio off
+        repeat
+        wait 0
+        until 80E1:   not player 0 pressed_key PAD_RADIO_STATION_UP
+        041E: set_radio_station 11 // force radio off
+    end
+    
+    if 00E1:   player 0 pressed_key PAD_RADIO_STATION_DOWN
+    then
+        041E: set_radio_station 11 // force radio off
+        repeat
+        wait 0
+        until 80E1:   not player 0 pressed_key PAD_RADIO_STATION_DOWN
+        041E: set_radio_station 11 // force radio off
+    end
+end
+0AB2: ret 0
+
+{======================================================================
+======================================================================}
+:GetObjectivesStatus // label 0@
+0AB1: @GetInt 2 label 0@ offset 0 ret 11@
+0AB1: @GetInt 2 label 0@ offset 1 ret 12@
+0AB1: @GetInt 2 label 0@ offset 2 ret 13@
+0AB1: @GetInt 2 label 0@ offset 3 ret 14@
+0AB1: @GetInt 2 label 0@ offset 4 ret 15@
+0AB2: ret 5 obj1_status 11@ obj2_status 12@ obj3_status 13@ obj4_status 14@ obj5_status 15@
+
+{======================================================================
+======================================================================}
+:JoannaResponse
+0209: 10@ = random_int_in_ranges 0 3
+if 10@ == 0
+then 00BC: show_text_highpriority GXT 'MJO_1' time 4000 flag 1  // (Joanna) Received.
+end
+if 10@ == 1
+then 00BC: show_text_highpriority GXT 'MJO_2' time 4000 flag 1  // (Joanna) Understood.
+end
+if 10@ == 2
+then 00BC: show_text_highpriority GXT 'MJO_3' time 4000 flag 1  // (Joanna) Confirmed.
+end
+if 10@ == 3
+then 00BC: show_text_highpriority GXT 'MJO_4' time 4000 flag 1  // (Joanna) Affirmative.
+end
+0AB2: ret 0
